@@ -2,8 +2,8 @@ package entity
 
 /* import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/infraLinkit/mediaplatform-datasource/src/config"
-	"github.com/infraLinkit/mediaplatform-datasource/src/helper"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/config"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/external"
 	"github.com/sirupsen/logrus"
 )
 
@@ -26,15 +26,15 @@ type (
 
 func NewInstanceTraffic(cfg *config.Cfg, o DataTraffic) *Traffic {
 
-	date := helper.GetFormatTime(cfg.TZ, "20060102")
-	//key := helper.Concat("-", o.URLServiceKey)
+	date := external.GetFormatTime(cfg.TZ, "20060102")
+	//key := external.Concat("-", o.URLServiceKey)
 
 	return &Traffic{
 		Date:       date,
 		Key:        o.URLServiceKey,
-		KeyCfg:     helper.Concat("-", o.URLServiceKey, "configIdx"),
-		KeyCounter: helper.Concat("-", o.URLServiceKey, "counterIdx"),
-		//KeyDataMining: helper.Concat("-", date, key, "dataminingIdx"),
+		KeyCfg:     external.Concat("-", o.URLServiceKey, "configIdx"),
+		KeyCounter: external.Concat("-", o.URLServiceKey, "counterIdx"),
+		//KeyDataMining: external.Concat("-", date, key, "dataminingIdx"),
 		DataTraffic: o,
 	}
 }

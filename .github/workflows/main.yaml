@@ -15,10 +15,10 @@ jobs:
                 include:
                   -
                     dockerfile: ./Dockerfile.datasource.server
-                    image: infralinkit/mediaplatform-datasource-server
+                    image: infralinkit/mediaplatform-datasource-server-v2
                   -
                     dockerfile: ./Dockerfile.datasource.migrate
-                    image: infralinkit/mediaplatform-datasource-migrate
+                    image: infralinkit/mediaplatform-datasource-migrate-v2
 
         permissions:
             contents: read

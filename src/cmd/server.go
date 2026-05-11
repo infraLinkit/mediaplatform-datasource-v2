@@ -6,8 +6,8 @@ import (
 
 	amqp "github.com/rabbitmq/amqp091-go"
 
-	"github.com/infraLinkit/mediaplatform-datasource/src/app"
-	"github.com/infraLinkit/mediaplatform-datasource/src/config"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/interfaces/http"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/config"
 	"github.com/spf13/cobra"
 )
 
@@ -76,7 +76,7 @@ var serverCmd = &cobra.Command{
 		// Reconnect watcher: monitor connection close, retry + re-setup channels.
 		go rmqpReconnectWatcher(c, cfg, channels)
 
-		router := app.MapUrls(app.App3rdParty{
+		router := http.MapUrls(http.App3rdParty{
 			Config: cfg,
 			Logs:   c.Logs,
 			DB:     c.DB,

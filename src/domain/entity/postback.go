@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/infraLinkit/mediaplatform-datasource/src/helper"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/external"
 	"github.com/sirupsen/logrus"
 )
 
@@ -33,7 +33,7 @@ func NewDataPostback(c *fiber.Ctx) *PostbackReceive {
 
 	m := c.Queries()
 
-	CookieKey := helper.Concat("-", helper.GetIpAddress(c), m["urlservicekey"], m["aff_sub"])
+	CookieKey := external.Concat("-", external.GetIpAddress(c), m["urlservicekey"], m["aff_sub"])
 
 	return &PostbackReceive{
 		CookieKey:     CookieKey,
@@ -69,7 +69,7 @@ func NewDataPostbackV2(c *fiber.Ctx) *PostbackReceive {
 
 	m := c.Queries()
 
-	CookieKey := helper.Concat("-", helper.GetIpAddress(c), m["aff_sub"])
+	CookieKey := external.Concat("-", external.GetIpAddress(c), m["aff_sub"])
 
 	return &PostbackReceive{
 		CookieKey:    CookieKey,

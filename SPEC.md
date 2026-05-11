@@ -4,11 +4,11 @@
 
 | Meta | Value |
 |------|-------|
-| Project | `infraLinkit/mediaplatform-datasource` |
-| Module path | `github.com/infraLinkit/mediaplatform-datasource` |
+| Project | `infraLinkit/mediaplatform-datasource-v2` |
+| Module path | `github.com/infraLinkit/mediaplatform-datasource-v2` |
 | Stack | Go 1.24, Fiber v2, GORM, PostgreSQL, Redis (go-redis + rueidis), RabbitMQ (rmqp), Google Sheets API, Cobra |
-| Architecture | DDD layered (`/src/{app,cmd,config,handler,helper,domain/{entity,repository}}`) |
-| Last updated | 2026-05-08 |
+| Architecture | Canonical DDD (`src/{application,domain,infrastructure,interfaces,cmd}`) |
+| Last updated | 2026-05-11 |
 
 ---
 
@@ -38,23 +38,23 @@ Mediaplatform-datasource adalah **central data API & ingestion layer** untuk eko
 ### 1.3 System Boundaries
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                     mediaplatform-datasource                  │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────────┐   │
-│  │ HTTP API │  │ Postback │  │  Cron /  │  │ Sub-cmd     │   │
-│  │ (Fiber)  │  │ (public) │  │ Workers  │  │ migrate/seed│   │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └──────┬──────┘   │
-│       │              │              │              │          │
-│       └──────┬───────┴──────────────┴──────────────┘          │
-│              │                                                 │
-│  ┌───────────┴────────────┐                                   │
-│  │  domain (entity, repo) │                                   │
-│  └───┬───────────┬────────┘                                   │
-└──────┼───────────┼────────────────────────────────────────────┘
-       │           │
-   ┌───▼───┐   ┌───▼─────┐   ┌──────────┐   ┌──────────────┐
-   │ PgSQL │   │ Redis   │   │ RabbitMQ │   │ Google Sheets│
-   └───────┘   └─────────┘   └──────────┘   └──────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                     mediaplatform-datasource-v2                  │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────┐  ┌──────────┐
+│  │ interfaces/   │  │ application/  │  │ domain/   │  │ cmd/     │
+│  │ http/handlers │  │ services      │  │ entities  │  │ CLI      │
+│  └──────┬────────┘  └──────┬────────┘  └─────┬─────┘  └────┬─────┘
+│         │                  │                 │             │
+│         └──────────┬───────┴─────────────────┴─────────────┘
+│                    │
+│  ┌─────────────────┴─────────────────┐
+│  │ infrastructure/ (persistence, ext)│
+│  └──────┬──────────────────┬─────────┘
+└─────────┼──────────────────┼─────────────────────────────────────┘
+          │                  │
+      ┌───▼───┐          ┌───▼─────┐      ┌──────────┐   ┌─────────┐
+      │ PgSQL │          │ Redis   │      │ RabbitMQ │   │ Sheets  │
+      └───────┘          └─────────┘      └──────────┘   └─────────┘
 ```
 
 **External dependencies**: PostgreSQL (state of truth), Redis (cache + JWT blacklist + counters), RabbitMQ (async pipeline ke worker process), Google Sheets API (export billable data), ARPU API (eksternal report aggregator).

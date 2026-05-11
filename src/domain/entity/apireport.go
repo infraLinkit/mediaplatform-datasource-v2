@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/infraLinkit/mediaplatform-datasource/src/config"
-	"github.com/infraLinkit/mediaplatform-datasource/src/helper"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/config"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/external"
 	"github.com/sirupsen/logrus"
 )
 
@@ -329,7 +329,7 @@ func NewInstanceTrxPinReport(c *fiber.Ctx, cfg *config.Cfg) *ApiPinReport {
 	payoutAdn, _ := strconv.ParseFloat(m["payout_adn"], 64)
 	payoutAF, _ := strconv.ParseFloat(m["payout_af"], 64)
 
-	country := helper.NormalizeCountries(m["country"])
+	country := external.NormalizeCountries(m["country"])
 
 	operator := strings.ToUpper(m["operator"])
 	if operator == "" && m["telco"] != "" {
@@ -340,7 +340,7 @@ func NewInstanceTrxPinReport(c *fiber.Ctx, cfg *config.Cfg) *ApiPinReport {
 	if m["date_send"] == "" {
 		dateSend = time.Now().In(cfg.TZ)
 	} else {
-		dateSend = helper.ParseVendorDateSend(cfg.TZ, m["date_send"])
+		dateSend = external.ParseVendorDateSend(cfg.TZ, m["date_send"])
 	}
 
 	pin := ApiPinReport{
@@ -418,7 +418,7 @@ func NewInstanceTrxPinPerfonrmanceReport(c *fiber.Ctx, cfg *config.Cfg) *ApiPinP
 	if m["date_send"] == "" {
 		dateSend = time.Now().In(cfg.TZ)
 	} else {
-		dateSend = helper.ParseVendorDateSend(cfg.TZ, m["date_send"])
+		dateSend = external.ParseVendorDateSend(cfg.TZ, m["date_send"])
 	}
 
 	pinRequest, _ := strconv.Atoi(m["pin_request"])
@@ -432,7 +432,7 @@ func NewInstanceTrxPinPerfonrmanceReport(c *fiber.Ctx, cfg *config.Cfg) *ApiPinP
 	pinOkRatio, _ := strconv.Atoi(m["pin_ok_ratio"])
 	chargedMO, _ := strconv.Atoi(m["charged_mo"])
 
-	country := helper.NormalizeCountries(m["country"])
+	country := external.NormalizeCountries(m["country"])
 
 	operator := strings.ToUpper(m["operator"])
 	if operator == "" && m["telco"] != "" {
@@ -500,7 +500,7 @@ func NewInstancePinPerformance(c *fiber.Ctx, cfg *config.Cfg) *ApiPinPerformance
 	}
 
 	pin := ApiPinPerformance{
-		DateSend:               helper.GetCurrentTime(cfg.TZ, time.RFC3339),
+		DateSend:               external.GetCurrentTime(cfg.TZ, time.RFC3339),
 		Country:                m["country"],
 		Company:                m["company"],
 		Adnet:                  m["adnet"],

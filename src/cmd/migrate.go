@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/infraLinkit/mediaplatform-datasource/src/config"
-	"github.com/infraLinkit/mediaplatform-datasource/src/domain/entity"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/config"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/domain/entity"
 	"github.com/spf13/cobra"
 )
 

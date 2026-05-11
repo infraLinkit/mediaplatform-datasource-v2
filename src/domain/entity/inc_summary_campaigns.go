@@ -59,7 +59,7 @@ func (sum *IncSummaryCampaign) AfterUpdate(db *gorm.DB) {
 				"ID-151",
 			}
 
-			if sum.MoReceived > 0 && helper.InArray(sum.URLServiceKey, haystack) {
+			if sum.MoReceived > 0 && external.InArray(sum.URLServiceKey, haystack) {
 
 				var (
 					c  Campaign

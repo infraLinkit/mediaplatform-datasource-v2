@@ -1,4 +1,4 @@
-module github.com/infraLinkit/mediaplatform-datasource
+module github.com/infraLinkit/mediaplatform-datasource-v2
 
 go 1.24.1
 
