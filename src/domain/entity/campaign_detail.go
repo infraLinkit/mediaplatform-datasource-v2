@@ -117,6 +117,7 @@ type (
 		IsEvina                   bool      `gorm:"not null;default:false" json:"is_evina"`
 		EvinaRedirectFraudURL     string    `gorm:"type:text;default:NA" json:"evina_redirect_fraud_url"`
 		CRThreshold               float64   `gorm:"type:double precision;default:0" json:"cr_threshold"`
+		ApiKey                    string    `gorm:"column:api_key;size:50" json:"api_key"`
 		CreatedAt                 time.Time
 		UpdatedAt                 time.Time
 	}
