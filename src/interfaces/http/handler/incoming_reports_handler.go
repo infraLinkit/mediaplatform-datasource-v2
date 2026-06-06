@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -10,10 +11,9 @@ import (
 	"net/url"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/config"
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/domain/entity"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/config"
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/external"
-	"github.com/wiliehidayat87/rmqp"
 )
 
 const PAGESIZE int = 10
@@ -1039,23 +1039,15 @@ func (h *IncomingHandler) ResendData(c *fiber.Ctx) error {
 
 		fullURL := fmt.Sprintf("%s?%s", baseURL, q.Encode())
 		message := `{"url":"` + fullURL + `"}`
-		published := h.Rmqp.PublishMsg(rmqp.PublishItems{
-			ExchangeName: "E_RESENDCAMPAIGNDATA",
-			QueueName:    "Q_RESENDCAMPAIGNDATA",
-			ContentType:  "application/json",
-			Payload:      message, // Send the properly formatted JSON
-			Priority:     0,
-		})
 
-		if !published {
+		pubCtx, pubCancel := context.WithTimeout(c.UserContext(), time.Duration(h.Config.RabbitMQCtxTimeout)*time.Second)
+		defer pubCancel()
+		if err := h.RM.PublishWithRetry(pubCtx, "E_RESENDCAMPAIGNDATA", "Q_RESENDCAMPAIGNDATA", []byte(message), ""); err != nil {
 			errorCounter++
 			h.Logs.Debug(fmt.Sprintf("[x] Failed published: Data: %s ...", message))
-			//fmt.Println(fmt.Sprintf("[x] Failed published: Data: %s ...", message))
 		} else {
 			h.Logs.Debug(fmt.Sprintf("[v] Published: Data: %s ...", message))
-			//fmt.Println(fmt.Sprintf("[v] Published: Data: %s ...", message))
 		}
-		//fmt.Println(message)
 
 	}
 
@@ -1179,15 +1171,9 @@ func (h *IncomingHandler) ResendDataAPIReport(c *fiber.Ctx) error {
 		fullURL := fmt.Sprintf("%s?%s", baseURL, q.Encode())
 		message := fmt.Sprintf(`{"url":"%s"}`, fullURL)
 
-		published := h.Rmqp.PublishMsg(rmqp.PublishItems{
-			ExchangeName: "E_RESENDCAMPAIGNDATA",
-			QueueName:    "Q_RESENDCAMPAIGNDATA",
-			ContentType:  "application/json",
-			Payload:      message,
-			Priority:     0,
-		})
-
-		if !published {
+		pubCtx2, pubCancel2 := context.WithTimeout(c.UserContext(), time.Duration(h.Config.RabbitMQCtxTimeout)*time.Second)
+		defer pubCancel2()
+		if err := h.RM.PublishWithRetry(pubCtx2, "E_RESENDCAMPAIGNDATA", "Q_RESENDCAMPAIGNDATA", []byte(message), ""); err != nil {
 			errorCounter++
 			h.Logs.Debug(fmt.Sprintf("[x] Failed published: %s", message))
 		} else {

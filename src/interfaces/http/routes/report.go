@@ -27,7 +27,9 @@ func RegisterReport(grp fiber.Router, h *handler.IncomingHandler) {
 	grp.Post("/resend-data", h.ResendData).Name("Resend Data")
 	grp.Post("/resend-data-apireport", h.ResendDataAPIReport).Name("Resend Data API Report")
 	grp.Get("/ioreport", h.DisplaySummaryBudgetIO).Name("IO Report")
-	grp.Post("/campaign-monitoring-summary/edit-target-budget", h.EditTargetBudget).Name("Edit Target Budget")
+	grp.Put("/ioreport/update", h.UpdateSummaryBudgetIO).Name("IO Report Update")
+	grp.Post("/campaign-monitoring-summary/edit-target-budget", h.EditTargetBudgetLevel).Name("Edit Target Budget")
+	grp.Post("/campaign-monitoring-summary/edit-target-budget-batch", h.EditTargetBudgetBatch).Name("Edit Target Budget Batch")
 	grp.Get("/campaign-spending-channel", h.DisplayCampaignSpendingChannel).Name("Campaign Spending Channel")
 	grp.Get("/campaign-spending-channel/country-children", h.DisplayCampaignSpendingChannelCountryChildren).Name("Campaign Spending Channel Country Children")
 }

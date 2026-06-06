@@ -4,6 +4,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/gofiber/storage/rueidis"
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/config"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/messaging"
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/persistence"
 	"github.com/sirupsen/logrus"
 	"github.com/wiliehidayat87/rmqp"
@@ -17,6 +18,7 @@ type (
 		Logs   *logrus.Logger
 		DB     *gorm.DB
 		Rmqp   rmqp.AMQP
+		RM     *messaging.RabbitManager
 		R      *rueidis.Storage
 		RCP    *redis.Client
 		DS     *persistence.BaseModel
@@ -41,6 +43,7 @@ func NewIncomingHandler(obj IncomingHandler) *IncomingHandler {
 		R:      obj.R,
 		RCP:    obj.RCP,
 		Rmqp:   obj.Rmqp,
+		RM:     obj.RM,
 		DS:     b,
 		GS:     obj.GS,
 	}

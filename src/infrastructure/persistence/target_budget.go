@@ -181,3 +181,48 @@ func (r *BaseModel) AddTargetBudget(s entity.TargetBudget, data []entity.TargetB
 	}
 	return q.Error
 }
+
+
+func (r *BaseModel) GetBudgetAggByOperator(country string, startDate time.Time, endDate time.Time, operator, partner, service, adnet string) ([]entity.BudgetAggEntry, error) {
+	periodStart := time.Date(startDate.Year(), startDate.Month(), 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02")
+	periodEnd := time.Date(endDate.Year(), endDate.Month()+1, 1, 0, 0, 0, 0, time.UTC).AddDate(0, 0, -1).Format("2006-01-02")
+
+	where := " AND TRUE"
+	args := []interface{}{periodStart, periodEnd}
+	if country != "" {
+		where += " AND UPPER(country) = UPPER(?)"
+		args = append(args, country)
+	}
+	if operator != "" {
+		where += " AND UPPER(operator) = UPPER(?)"
+		args = append(args, operator)
+	}
+	if partner != "" {
+		where += " AND partner = ?"
+		args = append(args, partner)
+	}
+	if service != "" {
+		where += " AND service = ?"
+		args = append(args, service)
+	}
+	if adnet != "" {
+		where += " AND adnet = ?"
+		args = append(args, adnet)
+	}
+
+	SQL := fmt.Sprintf(`
+		SELECT UPPER(country) AS country, UPPER(operator) AS operator,
+		       partner, service, adnet, year, month,
+		       MAX(budget) AS budget
+		FROM target_budget_details
+		WHERE (year::text||'-'||lpad(month::text,2,'0')||'-02')::date BETWEEN ? AND ?
+		%s
+		GROUP BY UPPER(country), UPPER(operator), partner, service, adnet, year, month`, where)
+
+	var out []entity.BudgetAggEntry
+	if err := r.DB.Raw(SQL, args...).Scan(&out).Error; err != nil {
+		fmt.Printf("[BudgetAgg] SQL ERROR: %v\n", err)
+		return nil, err
+	}
+	return out, nil
+}

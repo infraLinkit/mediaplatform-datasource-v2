@@ -292,4 +292,21 @@ type (
 		URLLanding    string `json:"url_landing" query:"url_landing"`
 		URLService    string `json:"url_service" query:"url_service"`
 	}
+
+	InquiryAPICampID struct {
+		Country   string `json:"country" query:"country"`
+		Operator  string `json:"operator" query:"operator"`
+		Service   string `json:"service" query:"service"`
+		Adnet     string `json:"adnet" query:"adnet"`
+	}
+
+	InquiryAPICampIDResult struct {
+		URLServiceKey string `json:"urlservicekey"`
+		Country       string `json:"country"`
+		Operator      string `json:"operator"`
+		Partner       string `json:"partner"`
+		Aggregator    string `json:"aggregator"`
+		Adnet         string `json:"adnet"`
+		Service       string `json:"service"`
+	}
 )

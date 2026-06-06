@@ -8,10 +8,11 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/storage/rueidis"
-	"github.com/infraLinkit/mediaplatform-datasource-v2/src/interfaces/http/routes"
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/config"
-	"github.com/infraLinkit/mediaplatform-datasource-v2/src/interfaces/http/handler"
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/external"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/messaging"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/interfaces/http/handler"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/interfaces/http/routes"
 	_ "github.com/lib/pq"
 	"github.com/mikhail-bigun/fiberlogrus"
 	"github.com/sirupsen/logrus"
@@ -41,6 +42,7 @@ type App3rdParty struct {
 	R      *rueidis.Storage
 	RCP    *redis.Client
 	Rmqp   rmqp.AMQP
+	RM     *messaging.RabbitManager
 	GS     *sheets.Service
 }
 
@@ -89,6 +91,7 @@ func MapUrls(obj App3rdParty) *fiber.App {
 		RCP:    obj.RCP,
 		DB:     obj.DB,
 		Rmqp:   obj.Rmqp,
+		RM:     obj.RM,
 		GS:     obj.GS,
 	})
 

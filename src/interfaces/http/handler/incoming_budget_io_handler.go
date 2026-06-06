@@ -573,3 +573,14 @@ func MapSummaryBudgetIOToContinentReport(data []entity.SummaryBudgetIO) []entity
 	return reports
 }
 
+func (h *IncomingHandler) UpdateSummaryBudgetIO(c *fiber.Ctx) error {
+	var req entity.UpdateSummaryBudgetIORequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"status": "NOK", "error": "invalid request body"})
+	}
+	if err := h.DS.UpdateSummaryBudgetIO(req); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": "NOK", "error": err.Error()})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "OK", "error": ""})
+}
+

@@ -1,15 +1,17 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/domain/entity"
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/external"
-	"github.com/wiliehidayat87/rmqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 func (h *IncomingHandler) Postback(c *fiber.Ctx) error {
@@ -93,21 +95,11 @@ func (h *IncomingHandler) Postback(c *fiber.Ctx) error {
 
 						corId := "RTO" + external.GetUniqId(h.Config.TZ)
 
-						published := h.Rmqp.PublishMsg(rmqp.PublishItems{
-							ExchangeName: h.Config.RabbitMQRatioExchangeName,
-							QueueName:    h.Config.RabbitMQRatioQueueName,
-							ContentType:  h.Config.RabbitMQDataType,
-							CorId:        corId,
-							Payload:      string(bodyReq),
-							Priority:     0,
-						})
-
-						if !published {
-
+						pubCtx, pubCancel := context.WithTimeout(c.UserContext(), time.Duration(h.Config.RabbitMQCtxTimeout)*time.Second)
+						defer pubCancel()
+						if err := h.RM.PublishWithRetry(pubCtx, h.Config.RabbitMQRatioExchangeName, h.Config.RabbitMQRatioQueueName, bodyReq, corId); err != nil {
 							h.Logs.Debug(fmt.Sprintf("[x] Failed published: %s, Data: %s ...", corId, string(bodyReq)))
-
 						} else {
-
 							h.Logs.Debug(fmt.Sprintf("[v] Published: %s, Data: %s ...", corId, string(bodyReq)))
 						}
 
@@ -300,21 +292,11 @@ func (h *IncomingHandler) Postback2(c *fiber.Ctx) error {
 
 								corId := "RTO" + external.GetUniqId(h.Config.TZ)
 
-								published := h.Rmqp.PublishMsg(rmqp.PublishItems{
-									ExchangeName: h.Config.RabbitMQRatioExchangeName,
-									QueueName:    h.Config.RabbitMQRatioQueueName,
-									ContentType:  h.Config.RabbitMQDataType,
-									CorId:        corId,
-									Payload:      string(bodyReq),
-									Priority:     0,
-								})
-
-								if !published {
-
+								pubCtx2, pubCancel2 := context.WithTimeout(c.UserContext(), time.Duration(h.Config.RabbitMQCtxTimeout)*time.Second)
+								defer pubCancel2()
+								if err := h.RM.PublishWithRetry(pubCtx2, h.Config.RabbitMQRatioExchangeName, h.Config.RabbitMQRatioQueueName, bodyReq, corId); err != nil {
 									h.Logs.Debug(fmt.Sprintf("[x] Failed published: %s, Data: %s ...", corId, string(bodyReq)))
-
 								} else {
-
 									h.Logs.Debug(fmt.Sprintf("[v] Published: %s, Data: %s ...", corId, string(bodyReq)))
 								}
 
@@ -401,10 +383,13 @@ func (h *IncomingHandler) PostbackV3(c *fiber.Ctx) error {
 					isPX := false
 
 					pxData := entity.PixelStorage{
-						URLServiceKey:  p.URLServiceKey,
-						Pxdate:         external.GetCurrentTime(h.Config.TZ, time.RFC3339),
-						Pixel:          p.AffSub,
-						PostbackMethod: p.Method,
+						URLServiceKey:        p.URLServiceKey,
+						Pxdate:               external.GetCurrentTime(h.Config.TZ, time.RFC3339),
+						Pixel:                p.AffSub,
+						PostbackMethod:       p.Method,
+						StatusBillable:       p.Status,
+						StatusCodeBillable:   p.StatusCode,
+						ReasonStatusBillable: p.StatusDetail,
 					}
 
 					switch p.Method {
@@ -599,21 +584,11 @@ func (h *IncomingHandler) PostbackV3(c *fiber.Ctx) error {
 
 								corId := "RTO" + external.GetUniqId(h.Config.TZ)
 
-								published := h.Rmqp.PublishMsg(rmqp.PublishItems{
-									ExchangeName: h.Config.RabbitMQRatioExchangeName,
-									QueueName:    h.Config.RabbitMQRatioQueueName,
-									ContentType:  h.Config.RabbitMQDataType,
-									CorId:        corId,
-									Payload:      string(bodyReq),
-									Priority:     0,
-								})
-
-								if !published {
-
+								pubCtx3, pubCancel3 := context.WithTimeout(c.UserContext(), time.Duration(h.Config.RabbitMQCtxTimeout)*time.Second)
+								defer pubCancel3()
+								if err := h.RM.PublishWithRetry(pubCtx3, h.Config.RabbitMQRatioExchangeName, h.Config.RabbitMQRatioQueueName, bodyReq, corId); err != nil {
 									h.Logs.Debug(fmt.Sprintf("[x] Failed published: %s, Data: %s ...", corId, string(bodyReq)))
-
 								} else {
-
 									h.Logs.Debug(fmt.Sprintf("[v] Published: %s, Data: %s ...", corId, string(bodyReq)))
 								}
 
@@ -787,3 +762,333 @@ func (h *IncomingHandler) InquiryCampID(c *fiber.Ctx) error {
 		}
 	}
 }
+
+func (h *IncomingHandler) InquiryAPICampID(c *fiber.Ctx) error {
+
+	c.Set("Content-Type", "application/x-www-form-urlencoded")
+	c.Accepts("application/x-www-form-urlencoded")
+	c.AcceptsCharsets("utf-8", "iso-8859-1")
+
+	h.Logs.Debug(fmt.Sprintf("Inquiry API Camp ID By Params %#v ...\n", c.AllParams()))
+
+	request := new(entity.InquiryAPICampID)
+
+	if err := c.QueryParser(request); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(entity.GlobalResponse{Code: fiber.StatusBadRequest, Message: "check mandatory param : country, operator, adnet"})
+	}
+
+	request.Country = strings.ToUpper(request.Country)
+	request.Operator = strings.ToUpper(request.Operator)
+	request.Service = strings.ToUpper(request.Service)
+	request.Adnet = strings.ToUpper(request.Adnet)
+
+	if request.Country == "" || request.Operator == "" || request.Service == "" || request.Adnet == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(entity.GlobalResponse{Code: fiber.StatusBadRequest, Message: "mandatory params missing: country, operator, service, adnet"})
+	}
+
+	results, err := h.DS.GetAPICampaignDetails(request.Country, request.Operator, request.Service, request.Adnet)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(entity.GlobalResponse{Code: fiber.StatusInternalServerError, Message: "failed to retrieve configs"})
+	}
+
+	if len(results) == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(entity.GlobalResponse{Code: fiber.StatusNotFound, Message: "no campaign found for given params"})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(entity.GlobalResponseWithData{Code: fiber.StatusOK, Message: "OK", Data: results})
+}
+
+func (h *IncomingHandler) PostbackDirectReply(c *fiber.Ctx) error {
+
+	c.Set("Content-Type", "application/x-www-form-urlencoded")
+	c.Accepts("application/x-www-form-urlencoded")
+	c.AcceptsCharsets("utf-8", "iso-8859-1")
+
+	h.Logs.Debug(fmt.Sprintf("Receive request postback %#v ...\n", c.AllParams()))
+
+	// Parse Postback Data
+	p := entity.NewDataPostbackV2(c)
+
+	// Validate Parameters
+	if v := p.ValidateParamsV2(h.Logs); v.Code == fiber.StatusBadRequest {
+		return c.Status(v.Code).JSON(entity.GlobalResponse{Code: v.Code, Message: v.Message})
+	} else {
+		if c.Cookies(p.CookieKey) != "" {
+			return c.Status(fiber.StatusForbidden).JSON(entity.GlobalResponse{Code: fiber.StatusForbidden, Message: "forbidden access"})
+		} else {
+			// Setup cookie if double requested within n-hour
+			c.Cookie(&fiber.Cookie{
+				Name:     p.CookieKey,
+				Value:    "1",
+				Expires:  time.Now().Add(3 * time.Second),
+				HTTPOnly: true,
+				SameSite: "lax",
+			})
+
+			if !strings.Contains(p.AffSub, "-") {
+				return c.Status(fiber.StatusNotFound).JSON(entity.GlobalResponse{Code: fiber.StatusNotFound, Message: "Invalid pixel format, pixel : " + p.AffSub})
+			} else {
+				dataraw := strings.Split(p.AffSub, "-")
+				p.URLServiceKey = external.Concat("-", dataraw[0], dataraw[1])
+
+				if dc, err := h.DS.GetDataConfig(external.Concat("-", p.URLServiceKey, "configIdx"), "$"); err == nil {
+					if !dc.IsActive {
+						return c.Status(fiber.StatusForbidden).JSON(entity.GlobalResponse{
+							Code:    fiber.StatusForbidden,
+							Message: "Campaign is currently inactive",
+						})
+					}
+
+					var px entity.PixelStorage
+					isPX := false
+
+					pxData := entity.PixelStorage{
+						URLServiceKey:        p.URLServiceKey,
+						Pxdate:               external.GetCurrentTime(h.Config.TZ, time.RFC3339),
+						Pixel:                p.AffSub,
+						PostbackMethod:       p.Method,
+						StatusBillable:       p.Status,
+						StatusCodeBillable:   p.StatusCode,
+						ReasonStatusBillable: p.StatusDetail,
+					}
+
+					switch p.Method {
+					case "ADNETCODE":
+						px, isPX = h.DS.GetByAdnetCode(pxData)
+					case "TOKEN":
+						px, isPX = h.DS.GetToken(pxData)
+					case "JSON-MSISDN", "XML-MSISDN", "HTML-MSISDN":
+						px, isPX = h.DS.GetPxByMsisdn(pxData)
+					case "PIXEL":
+						if g := h.RCP.Get(p.AffSub); g.Val() != "" {
+							isPX = true
+							if err = json.Unmarshal([]byte(g.Val()), &px); err != nil {
+								return c.Status(fiber.StatusNotAcceptable).JSON(entity.GlobalResponse{Code: fiber.StatusNotAcceptable, Message: "Invalid pixel format or this pixel not found, pixel : " + p.AffSub})
+							}
+							h.RCP.Del(p.AffSub)
+						} else {
+							switch dc.Partner {
+							case "ID-XLSMART-LINKIT":
+								px, isPX = h.DS.SpecialGetPx(pxData, h.Config.StartGetIntervalDatePXS, h.Config.EndGetIntervalDatePXS)
+							default:
+								px, isPX = h.DS.GetPx(pxData)
+							}
+						}
+					case "SPC-MVLS", "SPC-TFCS", "SPC":
+						isPX = true
+						px = entity.PixelStorage{
+							CampaignDetailId:  dc.Id,
+							Pxdate:            external.GetCurrentTime(h.Config.TZ, time.RFC3339),
+							URLServiceKey:     dc.URLServiceKey,
+							CampaignId:        dc.CampaignId,
+							Country:           dc.Country,
+							Partner:           dc.Partner,
+							Operator:          dc.Operator,
+							Aggregator:        dc.Aggregator,
+							Service:           dc.Service,
+							ShortCode:         dc.ShortCode,
+							Adnet:             dc.Adnet,
+							Keyword:           dc.Keyword,
+							Subkeyword:        p.SubKeyword,
+							IsBillable:        dc.IsBillable,
+							Plan:              dc.Plan,
+							URL:               dc.APIURL,
+							URLType:           dc.URLType,
+							Pixel:             "NA",
+							Msisdn:            p.Msisdn,
+							TrxId:             p.Trxid,
+							Token:             "NA",
+							IsUsed:            false,
+							Browser:           "NA",
+							OS:                "NA",
+							Ip:                strings.Join(c.IPs(), ", "),
+							ISP:               "NA",
+							ReferralURL:       "NA",
+							PubId:             dc.PubId,
+							UserAgent:         "NA",
+							TrafficSource:     false,
+							TrafficSourceData: "NA",
+							UserRejected:      false,
+							UniqueClick:       false,
+							UserDuplicated:    false,
+							Handset:           "NA",
+							HandsetCode:       "NA",
+							HandsetType:       "NA",
+							URLLanding:        dc.URLLanding,
+							URLWarpLanding:    dc.URLWarpLanding,
+							URLService:        dc.URLService,
+							URLTFCORSmartlink: dc.URLTFCSmartlink,
+							StatusCapping:     dc.StatusCapping,
+							StatusRatio:       dc.StatusRatio,
+							PO:                dc.PO,
+							Cost:              dc.Cost,
+							CampaignObjective: dc.Objective,
+							Channel:           dc.Channel,
+							Currency:          dc.Currency,
+							PostbackMethod:    p.Method,
+							LandingTime:       external.GetCurrentTime(h.Config.TZ, time.RFC3339),
+							LandedTime:        float64(0),
+							HttpStatus:        200,
+							IsOperator:        false,
+							CreatedAt:         external.GetCurrentTime(h.Config.TZ, time.RFC3339),
+							UpdatedAt:         external.GetCurrentTime(h.Config.TZ, time.RFC3339),
+							IsUnique:          false,
+						}
+
+						px.ID = h.DS.NewPixel(px)
+
+						h.DS.UpdateSummaryFromLandingPixelStorage(
+							entity.IncSummaryCampaign{
+								SummaryDate:   px.Pxdate,
+								URLServiceKey: px.URLServiceKey,
+								Country:       px.Country,
+								Operator:      px.Operator,
+								Partner:       px.Partner,
+								Service:       px.Service,
+								Adnet:         px.Adnet,
+								CampaignId:    px.CampaignId,
+							})
+
+						h.DS.UpdateSummaryFromLandingPixelStorageHour(
+							entity.IncSummaryCampaignHour{
+								SummaryDateHour: px.Pxdate,
+								URLServiceKey:   px.URLServiceKey,
+								Country:         px.Country,
+								Operator:        px.Operator,
+								Partner:         px.Partner,
+								Service:         px.Service,
+								Adnet:           px.Adnet,
+								CampaignId:      px.CampaignId,
+							})
+					}
+
+					if !isPX && p.Method == "" {
+						return c.Status(fiber.StatusNotFound).JSON(entity.GlobalResponse{Code: fiber.StatusNotFound, Message: "Pixel not found or duplicate used and parameter should have a method parameter, pixel : " + p.AffSub})
+					} else {
+						if !isPX {
+							return c.Status(fiber.StatusNotFound).JSON(entity.GlobalResponse{Code: fiber.StatusNotFound, Message: "Pixel not found or duplicate used and parameter should have a method parameter, pixel : " + p.AffSub})
+						} else {
+							if px.IsUsed {
+								return c.Status(fiber.StatusConflict).JSON(entity.GlobalResponseWithData{Code: fiber.StatusConflict, Message: "NOK - Pixel already used", Data: entity.PixelStorageRsp{
+									URLServiceKey: dc.URLServiceKey,
+									Adnet:         dc.Adnet,
+									IsBillable:    dc.IsBillable,
+									Pixel:         px.Pixel,
+									Browser:       px.Browser,
+									OS:            px.OS,
+									Handset:       px.UserAgent,
+									PubId:         px.PubId,
+									PixelUsedDate: px.PixelUsedDate.Format(time.RFC3339),
+								}})
+							} else {
+								px.PixelUsedDate = external.GetCurrentTime(h.Config.TZ, time.RFC3339)
+								bodyReq, _ := json.Marshal(px)
+								corId := "RTD" + external.GetUniqId(h.Config.TZ)
+
+								reply := "NOTSHAVED"
+								
+								var (
+									respBody []byte
+									pubErr   error
+								)
+								
+								if h.Rmqp.Connection == nil {
+									pubErr = fmt.Errorf("rabbitmq connection is nil")
+								} else {
+									ctx, cancel := context.WithTimeout(c.UserContext(), time.Duration(h.Config.RabbitMQCtxTimeout)*time.Second)
+									defer cancel()
+									
+									for attempt := 0; attempt < 3; attempt++ {
+										respBody, pubErr = func() ([]byte, error) {
+											ch, err := h.Rmqp.Connection.Channel()
+											if err != nil {
+												return nil, fmt.Errorf("failed to open channel: %w", err)
+											}
+											defer ch.Close()
+
+											consumerTag := uuid.New().String()
+											deliveries, err := ch.Consume(
+												"amq.rabbitmq.reply-to", // queue
+												consumerTag,             // consumer
+												true,                    // auto-ack
+												false,                   // exclusive
+												false,                   // no-local
+												false,                   // no-wait
+												nil,                     // args
+											)
+											if err != nil {
+												return nil, fmt.Errorf("failed to consume from reply-to: %w", err)
+											}
+											defer ch.Cancel(consumerTag, false)
+
+											msg := amqp.Publishing{
+												ContentType:   "application/json",
+												ReplyTo:       "amq.rabbitmq.reply-to",
+												CorrelationId: corId,
+												Body:          bodyReq,
+											}
+
+											err = ch.PublishWithContext(ctx, h.Config.RabbitMQRatioExchangeName, h.Config.RabbitMQRatioQueueName, false, false, msg)
+											if err != nil {
+												return nil, fmt.Errorf("failed to publish: %w", err)
+											}
+
+											for {
+												select {
+												case d, ok := <-deliveries:
+													if !ok {
+														return nil, fmt.Errorf("deliveries channel closed")
+													}
+													if d.CorrelationId == corId {
+														return d.Body, nil
+													}
+												case <-ctx.Done():
+													return nil, ctx.Err()
+												}
+											}
+										}()
+										
+										if pubErr == nil {
+											break
+										}
+										
+										h.Logs.Warnf("DirectReplyTo failed: %v. Retrying in %d ms... (Attempt %d/3)", pubErr, (attempt+1)*500, attempt+1)
+										select {
+										case <-time.After(time.Duration(attempt+1) * 500 * time.Millisecond):
+											continue
+										case <-ctx.Done():
+											pubErr = ctx.Err()
+											break
+										}
+									}
+								}
+
+								if pubErr != nil {
+									h.Logs.Debug(fmt.Sprintf("[x] Failed published, Error: %v, Data: %s ...", pubErr, string(bodyReq)))
+								} else {
+									h.Logs.Debug(fmt.Sprintf("[v] Published, Data: %s, Response: %s ...", string(bodyReq), string(respBody)))
+									reply = string(respBody)
+								}
+
+								return c.Status(fiber.StatusOK).JSON(entity.GlobalResponseWithData{Code: fiber.StatusOK, Message: reply, Data: entity.PixelStorageRsp{
+									URLServiceKey: dc.URLServiceKey,
+									Adnet:         dc.Adnet,
+									IsBillable:    dc.IsBillable,
+									Pixel:         px.Pixel,
+									Browser:       px.Browser,
+									OS:            px.OS,
+									Handset:       px.UserAgent,
+									PubId:         px.PubId,
+									PixelUsedDate: external.GetFormatTime(h.Config.TZ, time.RFC3339),
+								}})
+							}
+						}
+					}
+				} else {
+					return c.Status(fiber.StatusNotFound).JSON(entity.GlobalResponse{Code: fiber.StatusNotFound, Message: "Campaign ID not found"})
+				}
+			}
+		}
+	}
+}
+

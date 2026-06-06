@@ -74,6 +74,7 @@ type (
 		RabbitMQPassword                       string
 		RabbitMQVHost                          string
 		RabbitMQDataType                       string
+		RabbitMQCtxTimeout                     int
 		RabbitMQPixelStorageExchangeName       string
 		RabbitMQPixelStorageQueueName          string
 		RabbitMQClickStorageExchangeName       string
@@ -162,6 +163,7 @@ func InitCfg() *Cfg {
 	db_max_open := envIntDefault("DB_MAX_OPEN_CONNS", 100)
 	db_conn_lifetime := time.Duration(envIntDefault("DB_CONN_MAX_LIFETIME_MIN", 30)) * time.Minute
 	db_conn_idletime := time.Duration(envIntDefault("DB_CONN_MAX_IDLE_TIME_MIN", 10)) * time.Minute
+	rmqpctxtimeout := envIntDefault("RABBITMQCONTEXTTIMEOUT", 30)
 
 	redis_required := true // default: required (fail-fast)
 	if v := os.Getenv("REDIS_REQUIRED"); v != "" {
@@ -196,6 +198,7 @@ func InitCfg() *Cfg {
 		RabbitMQPassword:                       os.Getenv("RABBITMQPASSWORD"),
 		RabbitMQVHost:                          os.Getenv("RABBITMQVHOST"),
 		RabbitMQDataType:                       "application/json",
+		RabbitMQCtxTimeout:                     rmqpctxtimeout,
 		RabbitMQPixelStorageExchangeName:       os.Getenv("RABBITMQPIXELSTORAGEEXCHANGENAME"),
 		RabbitMQPixelStorageQueueName:          os.Getenv("RABBITMQPIXELSTORAGEQUEUENAME"),
 		RabbitMQClickStorageExchangeName:       os.Getenv("RABBITMQCLICKSTORAGEEXCHANGENAME"),

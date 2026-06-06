@@ -219,6 +219,51 @@ type (
 		CostPerConversion float64 `form:"cost-per-conversion" json:"cost_per_conversion"`
 		TargetDailyBudget float64 `form:"target-daily-budget" json:"target_daily_budget"`
 	}
+
+	EditTargetBudgetRequest struct {
+		Level    string  `form:"level"     json:"level"`
+		Country  string  `form:"country"   json:"country"`
+		Operator string  `form:"operator"  json:"operator"`
+		Partner  string  `form:"partner"   json:"partner"`
+		Service  string  `form:"service"   json:"service"`
+		Adnet    string  `form:"adnet"     json:"adnet"`
+		Year     int     `form:"year"      json:"year"`
+		Month    int     `form:"month"     json:"month"`
+		Budget   float64 `form:"budget"    json:"budget"`
+		DataType string  `form:"data_type" json:"data_type"`
+	}
+
+	BudgetDetailItem struct {
+		Country     string  `json:"country"      gorm:"column:country"`
+		Operator    string  `json:"operator"     gorm:"column:operator"`
+		Partner     string  `json:"partner"      gorm:"column:partner"`
+		Service     string  `json:"service"      gorm:"column:service"`
+		Adnet       string  `json:"adnet"        gorm:"column:adnet"`
+		Year        int     `json:"year"         gorm:"column:year"`
+		Month       int     `json:"month"        gorm:"column:month"`
+		Budget      float64 `json:"budget"       gorm:"column:budget"`
+		Spending    float64 `json:"spending"     gorm:"column:spending"`
+		BudgetUsage float64 `json:"budget_usage" gorm:"column:budget_usage"`
+	}
+
+	BudgetSummaryItem struct {
+		Country  string  `json:"country"  gorm:"column:country"`
+		Year     int     `json:"year"     gorm:"column:year"`
+		Month    int     `json:"month"    gorm:"column:month"`
+		Budget   float64 `json:"budget"   gorm:"column:budget"`
+		Spending float64 `json:"spending" gorm:"column:spending"`
+	}
+
+	BudgetAggEntry struct {
+		Country  string  `gorm:"column:country"`
+		Operator string  `gorm:"column:operator"`
+		Partner  string  `gorm:"column:partner"`
+		Service  string  `gorm:"column:service"`
+		Adnet    string  `gorm:"column:adnet"`
+		Year     int     `gorm:"column:year"`
+		Month    int     `gorm:"column:month"`
+		Budget   float64 `gorm:"column:budget"`
+	}
 )
 type Tabler interface {
 	TableName() string

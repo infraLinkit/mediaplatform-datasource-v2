@@ -1,5 +1,41 @@
+UP DATE : 2026-06-05
+===
+
+Author : Wilie (Antigravity AI assist)
+----------
+description :
+----------
+- [INFRA] Migrasi publisher RabbitMQ dari `wiliehidayat87/rmqp` (PublishMsg) ke `RabbitManager` baru
+  - Buat package `src/infrastructure/messaging/rabbitmq.go` (channel pool, auto-reconnect, 3x retry)
+  - Tambah field `RM *messaging.RabbitManager` ke `IncomingHandler` struct
+  - Tambah field `RM *messaging.RabbitManager` ke `App3rdParty` struct di `url_mapping.go`
+  - Init `RabbitManager` di `src/cmd/server.go` (pool 5, QoS 10)
+  - Ganti semua `h.Rmqp.PublishMsg` → `h.RM.PublishWithRetry` di:
+    - `incoming_postback_handler.go` (3 lokasi — RTO async)
+    - `incoming_campaign_management_handler.go` (1 lokasi)
+    - `incoming_reports_handler.go` (2 lokasi — ResendData, ResendDataAPIReport)
+- [DOCS] Buat folder `docs/` dengan 9 UC file (UC-01 sampai UC-09)
+  - UC-01: Postback Intake
+  - UC-02: Campaign Management
+  - UC-03: Reporting
+  - UC-04: User, Role & Menu Management
+  - UC-05: Country, Service & Catalog
+  - UC-06: Internal Endpoints
+  - UC-07: Budget IO & IP Range
+  - UC-08: RabbitMQ Messaging (RabbitManager)
+  - UC-09: Authentication & Authorization
+- [DOCS] Update `CLAUDE.md` dengan konvensi baru (RabbitManager, docs/, CorrelationID RTO/RTD)
+----------
+version image :
+- (pending build)
+----------
+correlation :
+- internal refactor — no Jira ticket
+----------
+
 UP DATE : 2025-10-13
 ===
+
 
 Author : Wilie
 ----------

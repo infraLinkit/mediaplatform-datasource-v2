@@ -10,5 +10,7 @@ func RegisterPostback(grp fiber.Router, h *handler.IncomingHandler) {
 	grp.Get("/postback/:urlservicekey/", h.Postback)
 	grp.Get("/postback", h.PostbackV3)
 	grp.Get("/postback_billed", h.PostbackBilled)
+	grp.Get("/postback_sync", h.PostbackDirectReply)
 	grp.Get("/inquire/campid", h.InquiryCampID)
+	grp.Get("/inquire/api-campid", h.InquiryAPICampID)
 }
