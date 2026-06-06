@@ -1,3 +1,37 @@
+UP DATE : 2026-06-06
+===
+
+Author : Wilie (Antigravity AI assist)
+----------
+description :
+----------
+- [REFACTOR] Hapus legacy `wiliehidayat87/rmqp` — 100% migrasi ke `RabbitManager`
+  - Hapus `c.InitMessageBroker()` (rmqp.AMQP) dari `config/c.go`
+  - Hapus `Setup.Rmqp` field dari `config/c.go`
+  - Hapus `rmqpReconnectWatcher` goroutine dari `cmd/server.go`
+    → Reconnect kini dihandle `RabbitManager.handleReconnect()` di messaging package
+  - Hapus `Rmqp` field dari `IncomingHandler`, `App3rdParty`, `url_mapping`
+  - Update `external/sig.go`: `SigCH.Rabbit rmqp.AMQP` → `*messaging.RabbitManager`
+  - Tambah `DeclareInfrastructure()` dan `UnbindRoute()` method ke `RabbitManager`
+  - Postback handler: ganti inline DirectReplyTo logic → `h.RM.DirectReplyToWithRetry`
+  - `go mod tidy`: hapus `github.com/wiliehidayat87/rmqp` dari `go.mod` + `go.sum`
+- [CI] Fix GitHub Actions Node.js 20 deprecation warning
+  - `docker/setup-buildx-action`: v3 → v4
+  - `docker/build-push-action`: v5 → v6
+  - Tambah `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` env var
+- [DOCS] Fix sinkronisasi UC SPEC.md vs docs/
+  - SPEC.md §3.1 UC Map sekarang identik UC-01 s/d UC-09 seperti docs/ folder
+  - Sub-use-case dilist sebagai UC-NN.sub (UC-01.1, UC-02.5, dst)
+  - Update §9 Acceptance Criteria ke numbering baru
+  - Regenerate SPEC.html
+----------
+version image :
+- (pending build)
+----------
+correlation :
+- internal refactor — no Jira ticket
+----------
+
 UP DATE : 2026-06-05
 ===
 
