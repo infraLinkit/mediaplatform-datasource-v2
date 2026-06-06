@@ -6,6 +6,12 @@ on:
       - "v*.*.*"
   workflow_dispatch:
 
+# Force all actions to use Node.js 24 runtime
+# Resolves: "Node.js 20 actions are deprecated" warning
+# Ref: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
     build-and-push-image:
         runs-on: ubuntu-latest
