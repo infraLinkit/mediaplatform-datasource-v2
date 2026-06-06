@@ -13,8 +13,8 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/gofiber/storage/rueidis"
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/external"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/messaging"
 	"github.com/sirupsen/logrus"
-	"github.com/wiliehidayat87/rmqp"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 	"gorm.io/driver/postgres"
@@ -128,7 +128,7 @@ type (
 		R              *rueidis.Storage
 		RCP            *redis.Client
 		DB             *gorm.DB
-		Rmqp           rmqp.AMQP
+		RM             *messaging.RabbitManager
 		GS             *sheets.Service
 		RedisAvailable bool
 	}
@@ -143,6 +143,7 @@ func InitCfg() *Cfg {
 	}
 
 	loc, _ := time.LoadLocation(os.Getenv("TZ"))
+	time.Local = loc // Set global location
 
 	rabbitmq_port, _ := strconv.Atoi(os.Getenv("RABBITMQPORT"))
 	redis_dbindex, _ := strconv.Atoi(os.Getenv("REDISDBINDEX"))
@@ -293,10 +294,26 @@ func (c *Cfg) Initiate(logname string) (*Setup, error) {
 		// rj/rcp bisa nil — caller wajib cek RedisAvailable
 	}
 
-	rb, err := c.InitMessageBroker()
-	if err != nil {
-		return nil, fmt.Errorf("init message broker: %w", err)
+	rmDeclares := []messaging.RabbitDeclare{
+		{ExchangeName: c.RabbitMQPixelStorageExchangeName, ExchangeType: "direct", QueueName: c.RabbitMQPixelStorageQueueName, RoutingKey: c.RabbitMQPixelStorageQueueName, Durable: true},
+		{ExchangeName: c.RabbitMQClickStorageExchangeName, ExchangeType: "direct", QueueName: c.RabbitMQClickStorageQueueName, RoutingKey: c.RabbitMQClickStorageQueueName, Durable: true},
+		{ExchangeName: c.RabbitMQRedisCounterExchangeName, ExchangeType: "direct", QueueName: c.RabbitMQRedisCounterQueueName, RoutingKey: c.RabbitMQRedisCounterQueueName, Durable: true},
+		{ExchangeName: c.RabbitMQRatioExchangeName, ExchangeType: "direct", QueueName: c.RabbitMQRatioQueueName, RoutingKey: c.RabbitMQRatioQueueName, Durable: true},
+		{ExchangeName: c.RabbitMQPostbackAdnetExchangeName, ExchangeType: "direct", QueueName: c.RabbitMQPostbackAdnetQueueName, RoutingKey: c.RabbitMQPostbackAdnetQueueName, Durable: true},
+		{ExchangeName: c.RabbitMQCampaignManagementExchangeName, ExchangeType: "direct", QueueName: c.RabbitMQCampaignManagementQueueName, RoutingKey: c.RabbitMQCampaignManagementQueueName, Durable: true},
+		{ExchangeName: c.RabbitMQAlertManagementExchangeName, ExchangeType: "direct", QueueName: c.RabbitMQAlertManagementQueueName, RoutingKey: c.RabbitMQAlertManagementQueueName, Durable: true},
 	}
+
+	rm := messaging.InitMessageBroker(messaging.RabbitConfig{
+		Host:     c.RabbitMQHost,
+		Port:     c.RabbitMQPort,
+		User:     c.RabbitMQUsername,
+		Password: c.RabbitMQPassword,
+		Vhost:    c.RabbitMQVHost,
+		PoolSize: 5,
+		Qos:      10,
+		Declares: rmDeclares,
+	}, l)
 
 	return &Setup{
 		Config:         c,
@@ -304,7 +321,7 @@ func (c *Cfg) Initiate(logname string) (*Setup, error) {
 		R:              rj,
 		RCP:            rcp,
 		DB:             c.InitGormPgx(l),
-		Rmqp:           rb,
+		RM:             rm,
 		GS:             c.InitGoogleSheet(l),
 		RedisAvailable: redisAvailable,
 	}, nil
@@ -439,18 +456,6 @@ func (c *Cfg) InitGormPgx(l *logrus.Logger) *gorm.DB {
 	return db
 }
 
-func (c *Cfg) InitMessageBroker() (rmqp.AMQP, error) {
-	var rb rmqp.AMQP
-
-	rb.SetAmqpURL(c.RabbitMQHost, c.RabbitMQPort, c.RabbitMQUsername, c.RabbitMQPassword, c.RabbitMQVHost)
-
-	// Pakai variant dengan retry+backoff (5 attempts) instead of plain SetUpConnectionAmqp.
-	if err := rb.SetupConnectionAmqpAndReconnect(); err != nil {
-		return rb, fmt.Errorf("rabbitmq connect: %w", err)
-	}
-
-	return rb, nil
-}
 
 func (c *Cfg) InitGoogleSheet(l *logrus.Logger) *sheets.Service {
 	type KeyGS struct {

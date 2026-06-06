@@ -80,6 +80,7 @@ func (rm *RabbitManager) connect() error {
 		return err
 	}
 	for _, cfg := range rm.Configs {
+
 		_ = setupCh.ExchangeDeclare(cfg.ExchangeName, cfg.ExchangeType, cfg.Durable, false, false, false, nil)
 		args := amqp.Table{"x-queue-type": "classic", "x-queue-version": 2, "x-queue-mode": "lazy"}
 		_, _ = setupCh.QueueDeclare(cfg.QueueName, cfg.Durable, false, false, false, args)
@@ -107,6 +108,49 @@ func (rm *RabbitManager) connect() error {
 	rm.IsReady = true
 	rm.L.Info("RabbitMQ: Infrastructure Ready and Pool Populated")
 	return nil
+}
+
+func (rm *RabbitManager) DeclareInfrastructure(cfg RabbitDeclare) error {
+	rm.Mu.RLock()
+	defer rm.Mu.RUnlock()
+
+	if rm.Conn == nil || rm.Conn.IsClosed() {
+		return fmt.Errorf("rabbitmq connection not ready")
+	}
+
+	ch, err := rm.Conn.Channel()
+	if err != nil {
+		return err
+	}
+	defer ch.Close()
+
+	if err := ch.ExchangeDeclare(cfg.ExchangeName, cfg.ExchangeType, cfg.Durable, false, false, false, nil); err != nil {
+		return err
+	}
+
+	args := amqp.Table{"x-queue-type": "classic", "x-queue-version": 2, "x-queue-mode": "lazy"}
+	if _, err := ch.QueueDeclare(cfg.QueueName, cfg.Durable, false, false, false, args); err != nil {
+		return err
+	}
+
+	return ch.QueueBind(cfg.QueueName, cfg.RoutingKey, cfg.ExchangeName, false, nil)
+}
+
+func (rm *RabbitManager) UnbindRoute(queueName, routingKey, exchangeName string) error {
+	rm.Mu.RLock()
+	defer rm.Mu.RUnlock()
+
+	if rm.Conn == nil || rm.Conn.IsClosed() {
+		return fmt.Errorf("rabbitmq connection not ready")
+	}
+
+	ch, err := rm.Conn.Channel()
+	if err != nil {
+		return err
+	}
+	defer ch.Close()
+
+	return ch.QueueUnbind(queueName, routingKey, exchangeName, nil)
 }
 
 func (rm *RabbitManager) handleReconnect() {
@@ -189,6 +233,7 @@ func (rm *RabbitManager) PublishWithRetry(ctx context.Context, exchange, routing
 		}
 
 		lastErr = err
+		//log.Printf("Nack received or Publish failed: %v. Retrying in %d ms...", err, (i+1)*500)
 		rm.L.Warnf("Nack received or Publish failed: %#v. Retrying in %d ms...", err, (i+1)*500)
 
 		// Wait before trying again (Exponential backoff)

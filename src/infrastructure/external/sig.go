@@ -5,8 +5,8 @@ import (
 	"os"
 	"syscall"
 
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/messaging"
 	"github.com/sirupsen/logrus"
-	"github.com/wiliehidayat87/rmqp"
 	"gorm.io/gorm"
 )
 
@@ -15,7 +15,7 @@ type SigCH struct {
 	Sigch   chan os.Signal
 	Forever chan bool
 	DB      *gorm.DB
-	Rabbit  rmqp.AMQP
+	Rabbit  *messaging.RabbitManager
 }
 
 func SigHandler(obj SigCH) {
@@ -57,19 +57,19 @@ func SigHandler(obj SigCH) {
 		obj.Logs.Info("got User-defined signal 2/SIGUSR2")
 	}
 
-	// Cleanup
+	// Cleanup DB
 	sqlDB, _ := obj.DB.DB()
 	defer sqlDB.Close()
-
 	obj.Logs.Info(fmt.Sprintf("Database Postgre (%#v connection) stopped successfully", sqlDB.Stats().InUse))
 
-	defer obj.Rabbit.Channel.Close()
-
-	obj.Logs.Info(fmt.Sprintf("AMQP Channel RabbitMQ stopped (%#v) successfully", obj.Rabbit.Channel))
-
-	defer obj.Rabbit.Connection.Close()
-
-	obj.Logs.Info(fmt.Sprintf("AMQP Connection RabbitMQ stopped (%#v) successfully", obj.Rabbit.Connection))
+	// Cleanup RabbitMQ via RabbitManager
+	if obj.Rabbit != nil {
+		obj.Rabbit.IsClosing = true
+		if obj.Rabbit.Conn != nil && !obj.Rabbit.Conn.IsClosed() {
+			defer obj.Rabbit.Conn.Close()
+			obj.Logs.Info("RabbitMQ connection stopped successfully")
+		}
+	}
 
 	// Stopping goroutine
 	obj.Forever <- true
