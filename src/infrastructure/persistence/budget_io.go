@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/domain/entity"
 )
@@ -388,4 +389,37 @@ func (r *BaseModel) GetDisplaySummaryBudgetIO(o entity.DisplaySummaryBudgetIO) (
     r.Logs.Debug(fmt.Sprintf("Total data : %d ... \n", len(ss)))
 
     return ss, int64(len(ss)), rows.Err()
+}
+
+func (r *BaseModel) UpdateSummaryBudgetIO(req entity.UpdateSummaryBudgetIORequest) error {
+	updates := map[string]interface{}{"updated_at": time.Now()}
+	if req.MOTarget != nil {
+		updates["monthly_mo_target"] = *req.MOTarget
+	}
+	if req.IOTarget != nil {
+		updates["monthly_spend_target"] = *req.IOTarget
+	}
+	if req.TargetCAC != nil {
+		updates["target_cac"] = *req.TargetCAC
+	}
+	if req.ROI != nil {
+		updates["target_roi"] = int(*req.ROI)
+	}
+
+	if req.ID > 0 {
+		result := r.DB.Model(&entity.BudgetIO{}).Where("id = ?", req.ID).Updates(updates)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected > 0 {
+			return nil
+		}
+	}
+
+	if req.Country == "" || req.Month == "" {
+		return fmt.Errorf("UpdateSummaryBudgetIO: id or (country, month) required")
+	}
+	return r.DB.Model(&entity.BudgetIO{}).
+		Where("country = ? AND month = ?", req.Country, req.Month).
+		Updates(updates).Error
 }

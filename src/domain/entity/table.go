@@ -190,7 +190,7 @@ type (
 		Pixel             string    `gorm:"index:idx_pixel,size:255;default:NA" json:"pixel"`
 		Token             string    `gorm:"index:idx_token,size:255;default:NA" json:"token"`
 		TrxId             string    `gorm:"size:255;default:NA" json:"trx_id"`
-		TrxDate 		  time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"trx_date"`
+		TrxDate           time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"trx_date"`
 		Msisdn            string    `gorm:"index:idx_msisdn,size:255;default:NA" json:"msisdn"`
 		IsUsed            bool      `gorm:"not null;default:false" json:"is_used"`
 		Browser           string    `gorm:"size:150;default:NA" json:"browser"`
@@ -243,8 +243,18 @@ type (
 		MStatusCharge     bool      `gorm:"not null;default:false" json:"m_status_charge"`
 		MStatusTimeCharge time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"m_status_time_charge"`
 		MSnackCampaignId  string    `gorm:"size:255;default:NA" json:"m_snack_campaign_id"`
-		CreatedAt         time.Time
-		UpdatedAt         time.Time
+		IsEvina           bool      `gorm:"default:false" json:"is_evina"`
+		StatusEvinaFraud  bool      `gorm:"default:false" json:"status_evina_fraud"`
+		EvinaTI           string    `gorm:"type:text" json:"evina_ti"`
+		EvinaTRX             string    `gorm:"type:text" json:"evina_trx"`
+		EvinaTS              int64     `gorm:"default:0" json:"evina_ts"`
+		EvinaASCode          int       `gorm:"default:0" json:"evina_as_code"`
+		EvinaFTCode          int       `gorm:"default:0" json:"evina_ft_code"`
+		StatusBillable       string    `gorm:"size:150" json:"status_billable"`
+		StatusCodeBillable   string    `gorm:"size:150" json:"status_code_billable"`
+		ReasonStatusBillable string    `gorm:"size:255" json:"reason_status_billable"`
+		CreatedAt            time.Time
+		UpdatedAt            time.Time
 	}
 
 	ClickStorage struct {
@@ -450,7 +460,7 @@ type (
 		ShortCode                string    `gorm:"not null;size:50" json:"short_code"`
 		Traffic                  int       `gorm:"length:20;default:0" json:"traffic"`
 		Landing                  int       `gorm:"length:20;default:0" json:"landing"`
-		Clicked 			     int       `gorm:"length:20;default:0" json:"clicked"`
+		Clicked                  int       `gorm:"length:20;default:0" json:"clicked"`
 		MoReceived               int       `gorm:"length:20;default:0" json:"mo_received"`
 		CR                       float64   `gorm:"type:double precision;default:0" json:"cr"`
 		Postback                 int       `gorm:"length:20;default:0" json:"postback"`
@@ -527,7 +537,7 @@ type (
 		Adnet             string    `gorm:"uniqueIndex:idx_incsumunique;not null;size:50" json:"adnet"`
 		Service           string    `gorm:"uniqueIndex:idx_incsumunique;not null;size:50" json:"service"`
 		ShortCode         string    `gorm:"not null;size:50" json:"short_code"`
-		Clicked 		  int       `gorm:"length:20;default:0" json:"clicked"`
+		Clicked           int       `gorm:"length:20;default:0" json:"clicked"`
 		Landing           int       `gorm:"length:20;default:0" json:"landing"`
 		MoReceived        int       `gorm:"length:20;default:0" json:"mo_received"`
 		Postback          int       `gorm:"length:20;default:0" json:"postback"`
@@ -927,28 +937,28 @@ type (
 		ID     uint   `gorm:"primaryKey;autoIncrement" json:"id"`
 		Name   string `gorm:"type:varchar(80)" json:"name" `
 		ApiKey string `gorm:"type:text" json:"api_key"`
-    Type string `gorm:"type:varchar(80)" json:"type" `
+		Type   string `gorm:"type:varchar(80)" json:"type" `
 	}
 
 	MainstreamGroup struct {
-		ID            uint   `gorm:"primaryKey;autoIncrement" json:"id"`
-		Name          string `gorm:"type:varchar(254)" json:"name" `
-		Channel       string `gorm:"type:varchar(80)" json:"channel"  `
-		Agency        string `gorm:"type:varchar(80)" json:"agency" `
-		Country	   	  string `gorm:"type:varchar(10)" json:"country" `
-		Operator	  string `gorm:"type:varchar(50)" json:"operator" `
-		Service       string `gorm:"type:varchar(80)" json:"service" `
-		Company	   	  string `gorm:"type:varchar(80)" json:"company" `
-		CompanyLegalName string `gorm:"type:varchar(80)" json:"company_legal_name" `
-		CompanyAddress	   string `gorm:"type:varchar(255)" json:"company_address" `
-		CompanyEmail    string `gorm:"type:varchar(255)" json:"company_email"`
-		CompanyPhone    string `gorm:"type:varchar(20)" json:"company_phone"`
-		ServiceCurrency string `gorm:"type:varchar(10)" json:"service_currency"`
-		ServicePrice    float64 `gorm:"type:double precision;default:0" json:"service_price"`
-		UniqueDomain  string `gorm:"type:varchar(80)" json:"unique_domain"`
-		DomainService string `gorm:"type:varchar(80)" json:"domain_service"`
-		PortalURL     string `gorm:"type:text" json:"portal_url"`
-		APIURL        string `gorm:"type:text" json:"api_url"`
+		ID               uint    `gorm:"primaryKey;autoIncrement" json:"id"`
+		Name             string  `gorm:"type:varchar(254)" json:"name" `
+		Channel          string  `gorm:"type:varchar(80)" json:"channel"  `
+		Agency           string  `gorm:"type:varchar(80)" json:"agency" `
+		Country          string  `gorm:"type:varchar(10)" json:"country" `
+		Operator         string  `gorm:"type:varchar(50)" json:"operator" `
+		Service          string  `gorm:"type:varchar(80)" json:"service" `
+		Company          string  `gorm:"type:varchar(80)" json:"company" `
+		CompanyLegalName string  `gorm:"type:varchar(80)" json:"company_legal_name" `
+		CompanyAddress   string  `gorm:"type:varchar(255)" json:"company_address" `
+		CompanyEmail     string  `gorm:"type:varchar(255)" json:"company_email"`
+		CompanyPhone     string  `gorm:"type:varchar(20)" json:"company_phone"`
+		ServiceCurrency  string  `gorm:"type:varchar(10)" json:"service_currency"`
+		ServicePrice     float64 `gorm:"type:double precision;default:0" json:"service_price"`
+		UniqueDomain     string  `gorm:"type:varchar(80)" json:"unique_domain"`
+		DomainService    string  `gorm:"type:varchar(80)" json:"domain_service"`
+		PortalURL        string  `gorm:"type:text" json:"portal_url"`
+		APIURL           string  `gorm:"type:text" json:"api_url"`
 	}
 
 	SummaryLanding struct {

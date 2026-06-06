@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -9,10 +10,9 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/config"
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/domain/entity"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/config"
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/external"
-	"github.com/wiliehidayat87/rmqp"
 )
 
 func (h *IncomingHandler) DisplayCampaignManagement(c *fiber.Ctx) error {
@@ -159,15 +159,9 @@ func (h *IncomingHandler) SendCampaignHandler(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to serialize data"})
 	}
 
-	published := h.Rmqp.PublishMsg(rmqp.PublishItems{
-		ExchangeName: h.Config.RabbitMQCampaignManagementExchangeName,
-		QueueName:    h.Config.RabbitMQCampaignManagementQueueName,
-		ContentType:  h.Config.RabbitMQDataType,
-		Payload:      bodyReq.String(), // Send the properly formatted JSON
-		Priority:     0,
-	})
-
-	if !published {
+	pubCtx, pubCancel := context.WithTimeout(c.UserContext(), time.Duration(h.Config.RabbitMQCtxTimeout)*time.Second)
+	defer pubCancel()
+	if err := h.RM.PublishWithRetry(pubCtx, h.Config.RabbitMQCampaignManagementExchangeName, h.Config.RabbitMQCampaignManagementQueueName, bodyReq.Bytes(), ""); err != nil {
 		h.Logs.Debug(fmt.Sprintf("[x] Failed published: Data: %s ...", bodyReq.String()))
 	} else {
 		h.Logs.Debug(fmt.Sprintf("[v] Published: Data: %s ...", bodyReq.String()))

@@ -6,8 +6,9 @@ import (
 
 	amqp "github.com/rabbitmq/amqp091-go"
 
-	"github.com/infraLinkit/mediaplatform-datasource-v2/src/interfaces/http"
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/config"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/messaging"
+	"github.com/infraLinkit/mediaplatform-datasource-v2/src/interfaces/http"
 	"github.com/spf13/cobra"
 )
 
@@ -76,6 +77,23 @@ var serverCmd = &cobra.Command{
 		// Reconnect watcher: monitor connection close, retry + re-setup channels.
 		go rmqpReconnectWatcher(c, cfg, channels)
 
+		// Init RabbitManager (robust publisher dengan channel-pool, auto-reconnect, retry)
+		rmDeclares := []messaging.RabbitDeclare{
+			{ExchangeName: cfg.RabbitMQRatioExchangeName, ExchangeType: "direct", QueueName: cfg.RabbitMQRatioQueueName, RoutingKey: cfg.RabbitMQRatioQueueName, Durable: true},
+			{ExchangeName: cfg.RabbitMQCampaignManagementExchangeName, ExchangeType: "direct", QueueName: cfg.RabbitMQCampaignManagementQueueName, RoutingKey: cfg.RabbitMQCampaignManagementQueueName, Durable: true},
+			{ExchangeName: "E_RESENDCAMPAIGNDATA", ExchangeType: "direct", QueueName: "Q_RESENDCAMPAIGNDATA", RoutingKey: "Q_RESENDCAMPAIGNDATA", Durable: true},
+		}
+		rm := messaging.InitMessageBroker(messaging.RabbitConfig{
+			Host:     cfg.RabbitMQHost,
+			Port:     cfg.RabbitMQPort,
+			User:     cfg.RabbitMQUsername,
+			Password: cfg.RabbitMQPassword,
+			Vhost:    cfg.RabbitMQVHost,
+			PoolSize: 5,
+			Qos:      10,
+			Declares: rmDeclares,
+		}, c.Logs)
+
 		router := http.MapUrls(http.App3rdParty{
 			Config: cfg,
 			Logs:   c.Logs,
@@ -83,6 +101,7 @@ var serverCmd = &cobra.Command{
 			R:      c.R,
 			RCP:    c.RCP,
 			Rmqp:   c.Rmqp,
+			RM:     rm,
 			GS:     c.GS,
 		})
 

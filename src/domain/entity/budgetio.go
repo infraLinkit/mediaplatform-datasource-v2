@@ -158,4 +158,78 @@ type (
 		OrderColumn string `json:"order_column"`
 		OrderDir    string `json:"order_dir"`
 	}
+
+	SummaryBudgetIOAgg struct {
+		Country      string  `gorm:"column:country"`
+		Continent    string  `gorm:"column:continent"`
+		Company      string  `gorm:"column:company"`
+		Partner      string  `gorm:"column:partner"`
+		Operator     string  `gorm:"column:operator"`
+		Channel      string  `gorm:"column:channel"`
+		Service      string  `gorm:"column:service"`
+		ClientType   string  `gorm:"column:client_type"`
+		CampaignType string  `gorm:"column:campaign_type"`
+		Month        string  `gorm:"column:month"`
+		LastDate     string  `gorm:"column:last_date"`
+
+		ActualWeek1 float64 `gorm:"column:actual_week_1"`
+		ActualWeek2 float64 `gorm:"column:actual_week_2"`
+		ActualWeek3 float64 `gorm:"column:actual_week_3"`
+		ActualWeek4 float64 `gorm:"column:actual_week_4"`
+		MOWeek1     float64 `gorm:"column:mo_week1"`
+		MOWeek2     float64 `gorm:"column:mo_week2"`
+		MOWeek3     float64 `gorm:"column:mo_week3"`
+		MOWeek4     float64 `gorm:"column:mo_week4"`
+
+		BudgetIOID int     `gorm:"column:budget_io_id"`
+		IOTarget   float64 `gorm:"column:io_target"`
+		MOTarget   float64 `gorm:"column:mo_target"`
+		TargetCAC  float64 `gorm:"column:target_cac"`
+		LTV        float64 `gorm:"column:ltv"`
+		ROAS       float64 `gorm:"column:roas"`
+		ROI        float64 `gorm:"column:roi"`
+	}
+
+	IOReportRow struct {
+		BudgetIOID int    `json:"budget_io_id"`
+		Region     string `json:"region"`
+		Country    string `json:"country"`
+		Company    string `json:"company"`
+		Partner    string `json:"partner"`
+		Operator   string `json:"operator"`
+		Channel    string `json:"channel"`
+		Service    string `json:"service"`
+		ClientType string `json:"client_type"`
+		Month      string `json:"month"`
+
+		MOWeek1 float64 `json:"mo_week1"`
+		MOWeek2 float64 `json:"mo_week2"`
+		MOWeek3 float64 `json:"mo_week3"`
+		MOWeek4 float64 `json:"mo_week4"`
+
+		CostWeek1 float64 `json:"cost_week1"`
+		CostWeek2 float64 `json:"cost_week2"`
+		CostWeek3 float64 `json:"cost_week3"`
+		CostWeek4 float64 `json:"cost_week4"`
+
+		IOTarget    float64 `json:"io_target"`
+		MOTarget    float64 `json:"mo_target"`
+		TargetCAC   float64 `json:"target_cac"`
+		EstLTV      float64 `json:"est_ltv"`
+		EstROAS     float64 `json:"est_roas"`
+		ROI         float64 `json:"roi"`
+		RecordedDay int     `json:"recorded_day"`
+	}
+
+	UpdateSummaryBudgetIORequest struct {
+		ID        int      `json:"id"`
+		Country   string   `json:"country"`
+		Month     string   `json:"month"`
+		MOTarget  *float64 `json:"mo_target,omitempty"`
+		IOTarget  *float64 `json:"io_target,omitempty"`
+		TargetCAC *float64 `json:"target_cac,omitempty"`
+		LTV       *float64 `json:"ltv,omitempty"`
+		ROAS      *float64 `json:"roas,omitempty"`
+		ROI       *float64 `json:"roi,omitempty"`
+	}
 )

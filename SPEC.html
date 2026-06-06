@@ -1,595 +1,563 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang='id'>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SDD — mediaplatform-datasource</title>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>SPEC — mediaplatform-datasource-v2</title>
 <style>
-  :root {
-    --bg: #0f172a;
-    --surface: #1e293b;
-    --surface-2: #334155;
-    --text: #e2e8f0;
-    --text-dim: #94a3b8;
-    --accent: #38bdf8;
-    --accent-2: #818cf8;
-    --success: #22c55e;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --code-bg: #0b1220;
-    --border: #334155;
-  }
-
-  * { box-sizing: border-box; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
-    font-size: 15px;
-  }
-
-  .layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    min-height: 100vh;
-  }
-
-  aside {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    padding: 24px 16px;
-  }
-
-  aside h2 {
-    font-size: 14px;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin: 0 0 16px;
-  }
-
-  aside ol { padding-left: 20px; margin: 0; }
-  aside li { margin: 6px 0; }
-  aside a {
-    color: var(--text-dim);
-    text-decoration: none;
-    font-size: 14px;
-  }
-  aside a:hover { color: var(--accent); }
-
-  main {
-    padding: 40px 60px;
-    max-width: 1200px;
-    overflow-x: auto;
-  }
-
-  .header-card {
-    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px 32px;
-    margin-bottom: 32px;
-  }
-
-  .header-card h1 {
-    margin: 0 0 8px;
-    font-size: 28px;
-    color: var(--text);
-  }
-
-  .header-card .subtitle {
-    color: var(--text-dim);
-    font-size: 14px;
-  }
-
-  .meta-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin-top: 16px;
-  }
-
-  .meta-grid .meta-item {
-    background: rgba(15, 23, 42, 0.4);
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-  }
-
-  .meta-grid .meta-item strong {
-    color: var(--accent);
-    margin-right: 8px;
-  }
-
-  section {
-    margin-bottom: 48px;
-    scroll-margin-top: 20px;
-  }
-
-  h2 {
-    font-size: 22px;
-    color: var(--accent);
-    border-bottom: 2px solid var(--border);
-    padding-bottom: 8px;
-    margin-top: 40px;
-  }
-
-  h3 {
-    font-size: 17px;
-    color: var(--accent-2);
-    margin-top: 24px;
-  }
-
-  h4 {
-    font-size: 15px;
-    color: var(--text);
-    margin-top: 20px;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 16px 0;
-    font-size: 14px;
-    background: var(--surface);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  thead th {
-    background: var(--surface-2);
-    text-align: left;
-    padding: 10px 14px;
-    color: var(--accent);
-    font-weight: 600;
-    border-bottom: 2px solid var(--border);
-  }
-
-  tbody td {
-    padding: 8px 14px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
-  }
-
-  tbody tr:hover { background: rgba(56, 189, 248, 0.05); }
-  tbody tr:last-child td { border-bottom: none; }
-
-  code, kbd {
-    font-family: 'SF Mono', Monaco, Consolas, 'Courier New', monospace;
-    font-size: 13px;
-    background: var(--code-bg);
-    color: #fbbf24;
-    padding: 2px 6px;
-    border-radius: 4px;
-  }
-
-  pre {
-    background: var(--code-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    overflow-x: auto;
-    font-size: 13px;
-    line-height: 1.5;
-  }
-
-  pre code {
-    background: transparent;
-    padding: 0;
-    color: var(--text);
-  }
-
-  .ascii-diagram {
-    background: var(--code-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    overflow-x: auto;
-    font-family: 'SF Mono', Monaco, Consolas, monospace;
-    font-size: 12px;
-    line-height: 1.4;
-    color: var(--text);
-    white-space: pre;
-  }
-
-  ul { padding-left: 24px; }
-  li { margin: 4px 0; }
-
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  .badge-public { background: rgba(34, 197, 94, 0.15); color: var(--success); }
-  .badge-auth   { background: rgba(56, 189, 248, 0.15); color: var(--accent); }
-  .badge-warn   { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
-  .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
-
-  .callout {
-    border-left: 4px solid var(--accent);
-    background: rgba(56, 189, 248, 0.08);
-    padding: 12px 16px;
-    margin: 16px 0;
-    border-radius: 0 8px 8px 0;
-  }
-  .callout.warn   { border-color: var(--warning); background: rgba(245, 158, 11, 0.08); }
-  .callout.danger { border-color: var(--danger);  background: rgba(239, 68, 68, 0.08); }
-
-  .uc-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px 20px;
-    margin: 16px 0;
-  }
-
-  .uc-card h4 { margin-top: 0; color: var(--accent); }
-  .uc-card .uc-meta {
-    font-size: 13px;
-    color: var(--text-dim);
-    margin-bottom: 8px;
-  }
-
-  details {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin: 12px 0;
-  }
-  details summary {
-    cursor: pointer;
-    color: var(--accent-2);
-    font-weight: 600;
-    user-select: none;
-  }
-  details[open] summary { border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px; }
-
-  .footer {
-    margin-top: 60px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-    color: var(--text-dim);
-    font-size: 13px;
-    text-align: center;
-  }
-
-  @media (max-width: 900px) {
-    .layout { grid-template-columns: 1fr; }
-    aside { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
-    main { padding: 24px; }
-  }
+:root{--bg:#0f1117;--surface:#1a1d27;--surface2:#21253a;--border:#2d3248;--accent:#7c6ff7;--accent2:#5eead4;--text:#e2e8f0;--muted:#94a3b8;--code-bg:#131620;--red:#f87171;--green:#4ade80;--yellow:#fbbf24;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:15px;}
+#sidebar{position:fixed;top:0;left:0;width:270px;height:100vh;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:0;z-index:100;}
+#sidebar-header{padding:18px 16px 14px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(124,111,247,0.15),rgba(94,234,212,0.08));}
+#sidebar-header h2{font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);font-weight:700;}
+#sidebar-header p{font-size:11px;color:var(--muted);margin-top:3px;}
+#toc{padding:8px 0 20px;}
+#toc a{display:block;padding:4px 14px;color:var(--muted);text-decoration:none;font-size:12.5px;transition:all 0.12s;border-left:2px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#toc a:hover,#toc a.active{color:var(--accent2);border-left-color:var(--accent2);background:rgba(94,234,212,0.06);}
+#toc a.toc-h2{font-weight:600;color:var(--text);font-size:13px;margin-top:4px;padding-top:6px;}
+#toc a.toc-h3{padding-left:24px;font-size:12px;}
+#toc a.toc-h4{padding-left:36px;font-size:11px;color:#64748b;}
+#toc a.toc-h5{padding-left:48px;font-size:11px;color:#475569;}
+#content{margin-left:270px;padding:44px 64px 80px;max-width:1100px;}
+h1{font-size:2rem;font-weight:800;margin-bottom:6px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+h2{font-size:1.35rem;font-weight:700;color:var(--text);margin:44px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+h3{font-size:1.05rem;font-weight:600;color:var(--accent2);margin:28px 0 10px;}
+h4{font-size:0.95rem;font-weight:600;color:var(--yellow);margin:20px 0 8px;}
+h5{font-size:0.9rem;font-weight:600;color:var(--muted);margin:14px 0 6px;padding-left:12px;border-left:2px solid var(--border);}
+p{margin-bottom:10px;}
+a{color:var(--accent2);text-decoration:none;}a:hover{text-decoration:underline;}
+strong{color:var(--text);font-weight:700;}em{color:var(--accent2);font-style:italic;}
+code{background:var(--code-bg);color:var(--accent2);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono','Fira Code',monospace;font-size:0.84em;border:1px solid var(--border);}
+pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:18px 20px;overflow-x:auto;margin:14px 0;}
+pre code{background:none;border:none;padding:0;color:var(--text);font-size:0.87em;line-height:1.65;}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+thead{background:var(--surface2);}
+th{padding:9px 13px;text-align:left;font-weight:600;color:var(--accent);font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid var(--border);}
+td{padding:8px 13px;border-bottom:1px solid var(--border);vertical-align:top;font-size:13px;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(124,111,247,0.04);}
+/* UC parent rows bold */
+td:first-child:has(strong){background:rgba(124,111,247,0.06);}
+ul,ol{padding-left:22px;margin:6px 0 10px;}
+li{margin-bottom:3px;}
+blockquote{border-left:3px solid var(--accent);margin:14px 0;padding:10px 18px;background:rgba(124,111,247,0.06);border-radius:0 8px 8px 0;color:var(--muted);font-size:0.95em;}
+hr{border:none;border-top:1px solid var(--border);margin:30px 0;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+@media print{#sidebar{display:none;}#content{margin-left:0;padding:20px;}}
 </style>
 </head>
 <body>
-<div class="layout">
+<nav id='sidebar'>
+  <div id='sidebar-header'>
+    <h2>datasource-v2</h2>
+    <p>SPEC — Living Document</p>
+  </div>
+  <div id='toc'></div>
+</nav>
+<main id='content'>
+<h1>Spec-Driven Development — <code>mediaplatform-datasource-v2</code></h1>
 
-  <aside>
-    <h2>Table of Contents</h2>
-    <ol>
-      <li><a href="#bc">Business Context</a></li>
-      <li><a href="#actors">Actors</a></li>
-      <li><a href="#usecases">Use Cases</a></li>
-      <li><a href="#api">API Contract</a></li>
-      <li><a href="#data">Data Model</a></li>
-      <li><a href="#constraints">Constraints</a></li>
-      <li><a href="#edge">Edge Cases</a></li>
-      <li><a href="#ac">Acceptance Criteria</a></li>
-      <li><a href="#workflow">Add Feature Workflow</a></li>
-    </ol>
-  </aside>
+<blockquote>Living document. Update saat penambahan fitur <strong>sebelum</strong> implementasi.</blockquote>
 
-  <main>
+<table>
+<thead><tr><th>Meta</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Project</td><td><code>infraLinkit/mediaplatform-datasource-v2</code></td></tr>
+<tr><td>Module path</td><td><code>github.com/infraLinkit/mediaplatform-datasource-v2</code></td></tr>
+<tr><td>Stack</td><td>Go 1.24.1, Fiber v2, GORM, PostgreSQL, Redis (go-redis + rueidis), RabbitMQ (<code>wiliehidayat87/rmqp</code> + <code>RabbitManager</code>), Google Sheets API, Cobra</td></tr>
+<tr><td>Architecture</td><td>Canonical DDD (<code>src/{application,domain,infrastructure,interfaces,cmd}</code>)</td></tr>
+<tr><td>Last updated</td><td>2026-06-05</td></tr>
+<tr><td>UC Docs</td><td><a href="./docs/README.md"><code>docs/</code></a></td></tr>
+</tbody></table>
+<hr>
 
-    <div class="header-card">
-      <h1>Spec-Driven Development</h1>
-      <div class="subtitle">mediaplatform-datasource — central data API & ingestion layer</div>
-      <div class="meta-grid">
-        <div class="meta-item"><strong>Project</strong> infraLinkit/mediaplatform-datasource</div>
-        <div class="meta-item"><strong>Stack</strong> Go 1.24, Fiber v2, GORM, PostgreSQL, Redis, RabbitMQ</div>
-        <div class="meta-item"><strong>Architecture</strong> DDD layered (/src/{app,cmd,domain/...})</div>
-        <div class="meta-item"><strong>Last updated</strong> 2026-05-08</div>
-      </div>
-    </div>
+<h2>1. Business Context</h2>
 
-    <!-- 1. BUSINESS CONTEXT -->
-    <section id="bc">
-      <h2>1. Business Context</h2>
+<h3>1.1 Problem Domain</h3>
 
-      <h3>1.1 Problem Domain</h3>
-      <p>Sistem mengelola full lifecycle campaign DCB (direct carrier billing):</p>
-      <ul>
-        <li><strong>Campaign tracking</strong>: traffic → landing → click → MO → billed</li>
-        <li><strong>Postback handling</strong> dari adnet callback</li>
-        <li><strong>Performance reporting</strong>: CPA, ARPU, traffic, revenue, conversion, alert</li>
-        <li><strong>Budget management</strong>: target budget, IO approval, agency fee</li>
-        <li><strong>Master data</strong>: country, operator, partner, service, adnet, agency, channel</li>
-        <li><strong>User & access control</strong>: user, role, menu, permission, company hierarchy</li>
-      </ul>
+<p>Mediaplatform-datasource adalah <strong>central data API & ingestion layer</strong> untuk ekosistem media campaign Linkit (DCB / direct carrier billing). Sistem mengelola:</p>
 
-      <h3>1.2 Stakeholders & Value</h3>
-      <table>
-        <thead><tr><th>Stakeholder</th><th>Value</th></tr></thead>
-        <tbody>
-          <tr><td>Operations</td><td>Real-time monitoring, alert capping/ratio breach</td></tr>
-          <tr><td>Finance</td><td>Budget per IO, agency fee, revenue reconciliation</td></tr>
-          <tr><td>Adnet partners</td><td>Postback API untuk report konversi</td></tr>
-          <tr><td>Account managers</td><td>Dashboard summary, top-campaign per agency</td></tr>
-          <tr><td>Admins</td><td>Master data, user/role approval flow</td></tr>
-        </tbody>
-      </table>
+<ul><li><strong>Campaign tracking</strong> end-to-end: traffic → landing → click → MO (mobile-originated) → billed</li>
+<li><strong>Postback handling</strong> dari adnet (advertising network) callback — async (RTO) dan sync/RPC (RTD)</li>
+<li><strong>Performance reporting</strong>: CPA, ARPU, traffic, revenue, conversion, alert</li>
+<li><strong>Budget management</strong>: target budget, spending, IO (insertion order) approval</li>
+<li><strong>Master data management</strong>: country, operator, partner, service, adnet, agency, channel</li>
+<li><strong>User & access control</strong>: user, role, menu, permission, company hierarchy</li></ul>
 
-      <h3>1.3 System Boundaries</h3>
-      <div class="ascii-diagram">┌──────────────────────────────────────────────────────────────┐
-│                  mediaplatform-datasource                     │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐  │
-│  │ HTTP API │  │ Postback │  │  Cron /  │  │  Sub-cmd     │  │
-│  │ (Fiber)  │  │ (public) │  │  Workers │  │  migrate     │  │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └──────┬───────┘  │
-│       │             │             │              │            │
-│       └─────────┬───┴─────────────┴──────────────┘            │
-│                 │                                              │
-│  ┌──────────────┴────────────┐                                │
-│  │  domain (entity, repo)    │                                │
-│  └────┬────────────┬─────────┘                                │
-└───────┼────────────┼──────────────────────────────────────────┘
-        │            │
-   ┌────▼───┐   ┌────▼────┐  ┌──────────┐  ┌──────────────┐
-   │ PgSQL  │   │ Redis   │  │ RabbitMQ │  │ Google Sheets│
-   └────────┘   └─────────┘  └──────────┘  └──────────────┘</div>
+<h3>1.2 Stakeholders & Value</h3>
 
-      <h3>1.4 Out of Scope</h3>
-      <ul>
-        <li>Authentication user issuance (token issued by separate auth service)</li>
-        <li>Frontend (separate repo <code>cms</code>)</li>
-        <li>Batch worker logic (separate <code>cores/worker</code>)</li>
-        <li>Landing page rendering (separate <code>cores/lp</code>)</li>
-      </ul>
-    </section>
+<table>
+<thead><tr><th>Stakeholder</th><th>Value yg didapat</th></tr>
+</thead>
+<tbody>
+<tr><td>Operations team</td><td>Real-time campaign monitoring, alert otomatis untuk capping/ratio breach</td></tr>
+<tr><td>Finance</td><td>Budget tracking per IO, agency fee/cost calculation, revenue reconciliation</td></tr>
+<tr><td>Adnet partners</td><td>Postback API untuk report konversi billed/unbilled</td></tr>
+<tr><td>Account managers</td><td>Dashboard summary, top-campaign, performance per agency/channel</td></tr>
+<tr><td>Admins</td><td>Master data management, user/role approval flow</td></tr>
+</tbody></table>
+<h3>1.3 System Boundaries</h3>
 
-    <!-- 2. ACTORS -->
-    <section id="actors">
-      <h2>2. Actors</h2>
+<pre><code class="language-">┌──────────────────────────────────────────────────────────────────┐
+│                     mediaplatform-datasource-v2                  │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────┐  ┌──────────┐
+│  │ interfaces/   │  │ application/  │  │ domain/   │  │ cmd/     │
+│  │ http/handlers │  │ services      │  │ entities  │  │ CLI      │
+│  └──────┬────────┘  └──────┬────────┘  └─────┬─────┘  └────┬─────┘
+│         │                  │                 │             │
+│         └──────────┬───────┴─────────────────┴─────────────┘
+│                    │
+│  ┌─────────────────┴──────────────────────────────┐
+│  │ infrastructure/ (persistence, messaging, ext)  │
+│  └──────┬─────────────────────┬───────────────────┘
+└─────────┼─────────────────────┼────────────────────────────────────┘
+          │                     │
+      ┌───▼───┐  ┌─────────┐  ┌─▼────────────────┐   ┌─────────┐
+      │ PgSQL │  │ Redis   │  │ RabbitMQ          │   │ Sheets  │
+      └───────┘  └─────────┘  │ (rmqp + RM pool) │   └─────────┘
+                               └──────────────────┘</code></pre>
 
-      <h3>2.1 Human Actors</h3>
-      <table>
-        <thead><tr><th>Actor</th><th>Role</th><th>Akses</th></tr></thead>
-        <tbody>
-          <tr><td><strong>Admin</strong></td><td>Super admin platform</td><td>Full CRUD master data, approve user, manage role/menu</td></tr>
-          <tr><td><strong>Account Manager</strong></td><td>Campaign per agency</td><td>Read campaign, edit budget/IO/postback, scoped reports</td></tr>
-          <tr><td><strong>Finance</strong></td><td>Budget & payout reconcile</td><td>Cost report, edit payout, approve IO, export Excel</td></tr>
-          <tr><td><strong>Operations</strong></td><td>Monitor traffic & alert</td><td>Dashboard, alert, traffic/redirection, resend data</td></tr>
-          <tr><td><strong>Read-only User</strong></td><td>View-only</td><td>Subset dashboard + report (scoped)</td></tr>
-        </tbody>
-      </table>
+<p><strong>External dependencies</strong>: PostgreSQL (state of truth), Redis (cache + JWT blacklist + counters), RabbitMQ (async pipeline ke worker — via <code>RabbitManager</code> channel pool), Google Sheets API (export billable data), ARPU API (eksternal report aggregator).</p>
 
-      <h3>2.2 System Actors</h3>
-      <table>
-        <thead><tr><th>Actor</th><th>Interaksi</th></tr></thead>
-        <tbody>
-          <tr><td>Adnet system</td><td>Hit <code>/v1/postback*</code> callback</td></tr>
-          <tr><td>CMS frontend</td><td>Konsumsi semua endpoint authenticated</td></tr>
-          <tr><td>Auth service</td><td>Issue JWT (HS256). Datasource validate</td></tr>
-          <tr><td>Worker processes</td><td>Konsume RabbitMQ queue (pixel, click, ratio, dll)</td></tr>
-          <tr><td>Cron scheduler</td><td>Trigger <code>CronResetCapping</code> daily</td></tr>
-          <tr><td>Google Sheets</td><td>Sink billable campaign export</td></tr>
-          <tr><td>ARPU API</td><td>Source eksternal data ARPU</td></tr>
-        </tbody>
-      </table>
+<h3>1.4 Out of Scope</h3>
 
-      <h3>2.3 Permission Scope</h3>
-      <table>
-        <thead><tr><th>Resource</th><th>Filter via</th></tr></thead>
-        <tbody>
-          <tr><td>Company</td><td><code>user_companies</code> table — multi-tenant</td></tr>
-          <tr><td>Adnet</td><td><code>user_adnets</code> table</td></tr>
-          <tr><td>Agency</td><td><code>user_agencies</code> table</td></tr>
-          <tr><td>Service</td><td>Assignment via user_management</td></tr>
-        </tbody>
-      </table>
-      <p>JWT claims dipakai: <code>sub</code>, <code>jti</code>, <code>exp</code>, <code>nbf</code>, <code>aud</code>, <code>iss</code>, <code>type</code> (= "access").</p>
-    </section>
+<ul><li>Authentikasi user issuance (token issued oleh service auth terpisah, datasource cuma validate)</li>
+<li>Frontend (separate repo <code>cms</code>)</li>
+<li>Batch worker logic (separate <code>cores/worker</code>)</li>
+<li>Landing page rendering (separate <code>cores/lp</code>)</li></ul>
 
-    <!-- 3. USE CASES -->
-    <section id="usecases">
-      <h2>3. Use Cases</h2>
+<hr>
 
-      <h3>3.1 Use Case Map</h3>
-      <table>
-        <thead><tr><th>ID</th><th>Use Case</th><th>Actor</th><th>Prereq</th></tr></thead>
-        <tbody>
-          <tr><td>UC-01</td><td>Receive postback dari adnet</td><td>Adnet</td><td>Public</td></tr>
-          <tr><td>UC-02</td><td>Display campaign monitoring summary</td><td>AM, Ops</td><td>Auth, scope</td></tr>
-          <tr><td>UC-03</td><td>Display traffic/redirection report</td><td>Operations</td><td>Auth</td></tr>
-          <tr><td>UC-04</td><td>Display CPA / cost report</td><td>Finance, AM</td><td>Auth, scope</td></tr>
-          <tr><td>UC-05</td><td>Edit campaign capping/ratio/postback</td><td>AM, Admin</td><td>Auth, edit perm</td></tr>
-          <tr><td>UC-06</td><td>Manage master data</td><td>Admin</td><td>Auth, admin role</td></tr>
-          <tr><td>UC-07</td><td>Approve user registration</td><td>Admin</td><td>Auth, admin</td></tr>
-          <tr><td>UC-08</td><td>Create budget IO</td><td>AM</td><td>Auth</td></tr>
-          <tr><td>UC-09</td><td>Approve budget IO</td><td>Finance</td><td>Auth, finance</td></tr>
-          <tr><td>UC-10</td><td>Export report Excel</td><td>Finance, AM</td><td>Auth</td></tr>
-          <tr><td>UC-11</td><td>Upload IP range CSV</td><td>Admin</td><td>Auth, admin</td></tr>
-          <tr><td>UC-12</td><td>Upload campaign Excel batch</td><td>AM</td><td>Auth</td></tr>
-          <tr><td>UC-13</td><td>Resend failed data RabbitMQ</td><td>Operations</td><td>Auth</td></tr>
-          <tr><td>UC-14</td><td>View dashboard summary</td><td>All</td><td>Auth</td></tr>
-          <tr><td>UC-15</td><td>Logout (revoke JWT)</td><td>All</td><td>Auth</td></tr>
-          <tr><td>UC-16</td><td>DB schema migration</td><td>DevOps</td><td>Out-of-band run</td></tr>
-        </tbody>
-      </table>
+<h2>2. Actors</h2>
 
-      <h3>3.2 Use Case Detail (sample)</h3>
+<h3>2.1 Human Actors</h3>
 
-      <div class="uc-card">
-        <h4>UC-01: Receive Postback from Adnet</h4>
-        <div class="uc-meta">Actor: Adnet · Trigger: HTTP GET <code>/v1/postback?...</code></div>
-        <p><strong>Goal</strong>: Adnet melaporkan event billed/unbilled untuk record campaign tracking + trigger downstream pixel storage.</p>
-        <strong>Main flow:</strong>
-        <ol>
-          <li>Adnet hit endpoint dgn URL params (campaign_id, partner, msisdn, status)</li>
-          <li>Sistem validasi params (no auth header — public)</li>
-          <li>Sistem cek IP allowlist (kalau aktif)</li>
-          <li>Insert ke <code>postbacks</code> table</li>
-          <li>Publish ke RabbitMQ <code>E_PIXELSTORAGE</code></li>
-          <li>Return HTTP 200 + tracking response</li>
-        </ol>
-        <strong>Postcondition</strong>: Record postback tersimpan, message di queue siap dikonsumsi worker.
-      </div>
+<table>
+<thead><tr><th>Actor</th><th>Role</th><th>Akses</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Admin</strong></td><td>Super admin platform</td><td>Full CRUD master data, approve user, manage role/menu</td></tr>
+<tr><td><strong>Account Manager (AM)</strong></td><td>Manage campaign per agency</td><td>Read campaign monitoring, edit budget/IO/postback, view reports per company scope</td></tr>
+<tr><td><strong>Finance</strong></td><td>Reconcile budget & payout</td><td>View cost report, edit payout, approve budget IO, export Excel</td></tr>
+<tr><td><strong>Operations</strong></td><td>Monitor traffic & alert</td><td>View dashboard, alert report, traffic/redirection time, trigger resend data</td></tr>
+<tr><td><strong>Read-only User</strong></td><td>View-only access</td><td>Subset dashboard + report based on company/adnet/agency assignment</td></tr>
+</tbody></table>
+<h3>2.2 System Actors</h3>
 
-      <div class="uc-card">
-        <h4>UC-05: Edit Campaign Capping/Ratio/Postback</h4>
-        <div class="uc-meta">Actor: AM, Admin · Trigger: <code>POST /v1/management/campaign/editratio</code> (atau editmocapping, editpo, editcampaign)</div>
-        <p><strong>Goal</strong>: AM update parameter campaign berjalan tanpa restart.</p>
-        <strong>Main flow:</strong>
-        <ol>
-          <li>AM submit form dgn campaign_id + nilai baru</li>
-          <li>JWT divalidasi → user_id + scope</li>
-          <li>Cek user authorize untuk campaign (via company/agency scope)</li>
-          <li>Update <code>campaign_details</code> table</li>
-          <li>Publish ke <code>E_CAMPAIGNMANAGEMENT</code> (worker propagasi ke landing service)</li>
-          <li>Return updated record</li>
-        </ol>
-      </div>
-    </section>
+<table>
+<thead><tr><th>Actor</th><th>Interaksi</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Adnet system</strong> (eksternal)</td><td>Hit <code>/v1/postback*</code> callback saat user billed/unbilled</td></tr>
+<tr><td><strong>CMS frontend</strong></td><td>Konsumsi semua endpoint authenticated</td></tr>
+<tr><td><strong>Auth service</strong> (eksternal)</td><td>Issue JWT (HS256). Datasource validate signature + claims</td></tr>
+<tr><td><strong>Worker processes</strong></td><td>Konsume RabbitMQ queue (pixel, click, ratio, campaign management, alert)</td></tr>
+<tr><td><strong>Cron scheduler</strong></td><td>Trigger <code>CronResetCapping</code> daily</td></tr>
+<tr><td><strong>Google Sheets</strong></td><td>Sink untuk billable campaign data export</td></tr>
+<tr><td><strong>ARPU API</strong></td><td>Source eksternal untuk data ARPU per service/operator</td></tr>
+</tbody></table>
+<h3>2.3 Permission Scope</h3>
 
-    <!-- 4. API CONTRACT -->
-    <section id="api">
-      <h2>4. API Contract</h2>
+<table>
+<thead><tr><th>Resource</th><th>Cara filter scope</th></tr>
+</thead>
+<tbody>
+<tr><td>Company</td><td><code>user_companies</code> table — multi-tenant per AM</td></tr>
+<tr><td>Adnet</td><td><code>user_adnets</code> table</td></tr>
+<tr><td>Agency</td><td><code>user_agencies</code> table</td></tr>
+<tr><td>Service</td><td>Via assignment di <code>user_management</code></td></tr>
+</tbody></table>
+JWT claims yg dipakai: <code>sub</code> (user_id), <code>jti</code> (revocation key), <code>exp</code>, <code>nbf</code>, <code>aud</code>, <code>iss</code>, <code>type</code> (= "access"), <code>companies</code> ([]string), <code>adnets</code> ([]string).
 
-      <h3>4.1 Base & Versioning</h3>
-      <ul>
-        <li>Base path: <code>/v1</code></li>
-        <li>Versi mayor: path-based (<code>/v1</code>, <code>/v2</code> future)</li>
-        <li>Body limit: 100 MB (<code>BodyLimit: 100*1024*1024</code>)</li>
-        <li>Content-Type: <code>application/json</code> default</li>
-        <li>Upload: <code>multipart/form-data</code> (Excel/CSV)</li>
-      </ul>
+<hr>
 
-      <h3>4.2 Authentication</h3>
-      <p><span class="badge badge-public">PUBLIC</span> endpoints (no auth):</p>
-      <ul>
-        <li><code>GET /v1/postback/:urlservicekey/</code></li>
-        <li><code>GET /v1/postback</code></li>
-        <li><code>GET /v1/postback_billed</code></li>
-        <li><code>GET /v1/inquire/campid</code></li>
-        <li><code>/v1/ext/*</code> (placeholder)</li>
-      </ul>
+<h2>3. Use Cases</h2>
 
-      <p><span class="badge badge-auth">AUTH</span> required: <code>Authorization: Bearer &lt;JWT&gt;</code> · Algorithm HS256</p>
-      <pre><code>{
+<blockquote><strong>Konvensi</strong>: UC ID di SPEC.md <strong>identik</strong> dengan file di <code>docs/</code>. Granular sub-use-case dilist sebagai sub-item dalam UC induk.  </blockquote>
+<blockquote>UC-01 s/d UC-09 masing-masing punya file lengkap di <a href="./docs/README.md"><code>docs/</code></a>.</blockquote>
+
+<h3>3.1 Use Case Map</h3>
+
+<table>
+<thead><tr><th>UC</th><th>Nama Fitur</th><th>Actor Utama</th><th>Route Group</th><th>Doc</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>UC-01</strong></td><td><strong>Postback Intake</strong></td><td>Adnet</td><td><code>/v1/</code> (Public)</td><td><a href="./docs/UC-01-postback.md">UC-01-postback.md</a></td></tr>
+<tr><td>UC-01.1</td><td>Receive postback async (RTO)</td><td>Adnet</td><td><code>GET /v1/postback*</code></td><td>↑</td></tr>
+<tr><td>UC-01.2</td><td>Receive postback sync / Direct Reply-To (RTD)</td><td>Adnet</td><td><code>GET /v1/postback_sync</code></td><td>↑</td></tr>
+<tr><td>UC-01.3</td><td>Inquiry campaign ID</td><td>Adnet / System</td><td><code>GET /v1/inquire/*</code></td><td>↑</td></tr>
+<tr><td><strong>UC-02</strong></td><td><strong>Campaign Management</strong></td><td>AM, Admin</td><td><code>/v1/management/campaign</code> (Auth)</td><td><a href="./docs/UC-02-campaign-management.md">UC-02-campaign-management.md</a></td></tr>
+<tr><td>UC-02.1</td><td>Display / filter campaign list</td><td>AM</td><td><code>GET /campaign</code></td><td>↑</td></tr>
+<tr><td>UC-02.2</td><td>Edit capping / ratio / PO / MO</td><td>AM, Admin</td><td><code>POST /campaign/edit*</code></td><td>↑</td></tr>
+<tr><td>UC-02.3</td><td>Update status active/inactive</td><td>AM, Admin</td><td><code>POST /campaign/updatestatus</code></td><td>↑</td></tr>
+<tr><td>UC-02.4</td><td>Delete campaign + cleanup Redis</td><td>Admin</td><td><code>POST /campaign/delcampaign</code></td><td>↑</td></tr>
+<tr><td>UC-02.5</td><td>Send campaign data ke worker via RabbitMQ</td><td>AM</td><td><code>POST /campaign/send</code></td><td>↑</td></tr>
+<tr><td>UC-02.6</td><td>Update Google Sheet / billable</td><td>AM</td><td><code>POST /campaign/updategooglesheet*</code></td><td>↑</td></tr>
+<tr><td><strong>UC-03</strong></td><td><strong>Reporting</strong></td><td>AM, Finance, Operations</td><td><code>/v1/report</code> (Auth)</td><td><a href="./docs/UC-03-reporting.md">UC-03-reporting.md</a></td></tr>
+<tr><td>UC-03.1</td><td>Campaign monitoring summary + chart</td><td>AM, Ops</td><td><code>GET /report/campaign-monitoring-summary*</code></td><td>↑</td></tr>
+<tr><td>UC-03.2</td><td>CPA report</td><td>Finance, AM</td><td><code>GET /report/cpareportlist</code></td><td>↑</td></tr>
+<tr><td>UC-03.3</td><td>Cost report (list + detail)</td><td>Finance</td><td><code>GET /report/costreport/:v</code></td><td>↑</td></tr>
+<tr><td>UC-03.4</td><td>Traffic report + chart</td><td>Ops</td><td><code>GET /report/trafficreport*</code></td><td>↑</td></tr>
+<tr><td>UC-03.5</td><td>Revenue monitoring + chart</td><td>Finance, AM</td><td><code>GET /report/revenuemonitoring*</code></td><td>↑</td></tr>
+<tr><td>UC-03.6</td><td>Mainstream report</td><td>AM, Ops</td><td><code>GET /report/mainstreamreport</code></td><td>↑</td></tr>
+<tr><td>UC-03.7</td><td>Alert report</td><td>Ops</td><td><code>GET /report/alertreport/:v</code></td><td>↑</td></tr>
+<tr><td>UC-03.8</td><td>Performance report</td><td>AM</td><td><code>GET /report/performance-report</code></td><td>↑</td></tr>
+<tr><td>UC-03.9</td><td>IO report + update</td><td>Finance</td><td><code>GET/PUT /report/ioreport*</code></td><td>↑</td></tr>
+<tr><td>UC-03.10</td><td>Budget monitoring</td><td>Finance, AM</td><td><code>GET /report/budgetmonitoring</code></td><td>↑</td></tr>
+<tr><td>UC-03.11</td><td>Redirection time report</td><td>Ops</td><td><code>GET /report/redirectiontime</code></td><td>↑</td></tr>
+<tr><td>UC-03.12</td><td>Pin report / API performance</td><td>AM, Ops</td><td><code>GET /report/pinreport*</code></td><td>↑</td></tr>
+<tr><td>UC-03.13</td><td>Google traffic report</td><td>Ops</td><td><code>GET /report/google-traffic-report</code></td><td>↑</td></tr>
+<tr><td>UC-03.14</td><td>Campaign spending per channel + drill-down</td><td>AM, Finance</td><td><code>GET /report/campaign-spending-channel*</code></td><td>↑</td></tr>
+<tr><td>UC-03.15</td><td>Resend summary data ke Linkit Dashboard</td><td>Ops</td><td><code>POST /report/resend-data</code></td><td>↑</td></tr>
+<tr><td>UC-03.16</td><td>Resend API report ke Linkit Dashboard</td><td>Ops</td><td><code>POST /report/resend-data-apireport</code></td><td>↑</td></tr>
+<tr><td>UC-03.17</td><td>Edit target budget (single + batch)</td><td>AM</td><td><code>POST /report/campaign-monitoring-summary/edit-target-budget*</code></td><td>↑</td></tr>
+<tr><td>UC-03.18</td><td>Export CPA / cost report ke Excel</td><td>Finance, AM</td><td>Internal export endpoints</td><td>↑</td></tr>
+<tr><td>UC-03.19</td><td>Conversion log report</td><td>Ops, AM</td><td><code>GET /report/conversionlog</code></td><td>↑</td></tr>
+<tr><td><strong>UC-04</strong></td><td><strong>User, Role & Menu Management</strong></td><td>Admin</td><td><code>/v1/management/{user,role,menu,userlog}</code> (Auth)</td><td><a href="./docs/UC-04-user-role-menu.md">UC-04-user-role-menu.md</a></td></tr>
+<tr><td>UC-04.1</td><td>CRUD user (create, list, update, delete)</td><td>Admin</td><td><code>* /management/user*</code></td><td>↑</td></tr>
+<tr><td>UC-04.2</td><td>Approve user registration</td><td>Admin</td><td><code>PUT /management/user/approveuser/:id</code></td><td>↑</td></tr>
+<tr><td>UC-04.3</td><td>Assign service & adnet ke user</td><td>Admin</td><td><code>PUT /management/user/assignservice/:id</code></td><td>↑</td></tr>
+<tr><td>UC-04.4</td><td>CRUD role + permission</td><td>Admin</td><td><code>* /management/role*</code></td><td>↑</td></tr>
+<tr><td>UC-04.5</td><td>CRUD menu navigasi</td><td>Admin</td><td><code>* /management/menu*</code></td><td>↑</td></tr>
+<tr><td>UC-04.6</td><td>View user activity log</td><td>Admin</td><td><code>GET /management/userlog*</code></td><td>↑</td></tr>
+<tr><td>UC-04.7</td><td>Logout / revoke JWT</td><td>All authenticated</td><td>(Auth handler)</td><td>↑ + <a href="./docs/UC-09-auth.md">UC-09</a></td></tr>
+<tr><td><strong>UC-05</strong></td><td><strong>Country, Service & Catalog Master Data</strong></td><td>Admin</td><td><code>/v1/management/country-service</code> (Auth)</td><td><a href="./docs/UC-05-country-service-catalog.md">UC-05-country-service-catalog.md</a></td></tr>
+<tr><td>UC-05.1</td><td>CRUD country + continent</td><td>Admin</td><td><code>* /country-service/country*</code></td><td>↑</td></tr>
+<tr><td>UC-05.2</td><td>CRUD company + company group</td><td>Admin</td><td><code>* /country-service/company*</code></td><td>↑</td></tr>
+<tr><td>UC-05.3</td><td>CRUD domain + domain service</td><td>Admin</td><td><code>* /country-service/domain*</code></td><td>↑</td></tr>
+<tr><td>UC-05.4</td><td>CRUD operator</td><td>Admin</td><td><code>* /country-service/operator*</code></td><td>↑</td></tr>
+<tr><td>UC-05.5</td><td>CRUD partner</td><td>Admin</td><td><code>* /country-service/partner*</code></td><td>↑</td></tr>
+<tr><td>UC-05.6</td><td>CRUD service</td><td>Admin</td><td><code>* /country-service/service*</code></td><td>↑</td></tr>
+<tr><td>UC-05.7</td><td>CRUD adnet list + toggle DSP status</td><td>Admin</td><td><code>* /country-service/adnet-list*</code></td><td>↑</td></tr>
+<tr><td>UC-05.8</td><td>CRUD email</td><td>Admin</td><td><code>* /country-service/email*</code></td><td>↑</td></tr>
+<tr><td>UC-05.9</td><td>CRUD agency</td><td>Admin</td><td><code>* /country-service/agency*</code></td><td>↑</td></tr>
+<tr><td>UC-05.10</td><td>CRUD channel</td><td>Admin</td><td><code>* /country-service/channel*</code></td><td>↑</td></tr>
+<tr><td>UC-05.11</td><td>CRUD mainstream group</td><td>Admin</td><td><code>* /country-service/mainstream-group*</code></td><td>↑</td></tr>
+<tr><td><strong>UC-06</strong></td><td><strong>Internal Endpoints & Admin Tools</strong></td><td>System, AM</td><td><code>/v1/int</code> (Auth)</td><td><a href="./docs/UC-06-internal-endpoints.md">UC-06-internal-endpoints.md</a></td></tr>
+<tr><td>UC-06.1</td><td>Set target daily budget</td><td>System</td><td><code>PUT /int/setdata/:v/</code></td><td>↑</td></tr>
+<tr><td>UC-06.2</td><td>Update agency fee & cost conversion</td><td>System</td><td><code>PUT /int/updatedata/:v/</code></td><td>↑</td></tr>
+<tr><td>UC-06.3</td><td>Update ratio / postback / agency cost</td><td>System</td><td><code>PUT /int/update*</code></td><td>↑</td></tr>
+<tr><td>UC-06.4</td><td>Upload / upsert Excel SMS campaign</td><td>AM</td><td><code>POST /int/uploadexcel</code>, <code>PUT /int/upsertexcel/</code></td><td>↑</td></tr>
+<tr><td>UC-06.5</td><td>Pin report / performance transaksional</td><td>System</td><td><code>GET /int/datasentapi*</code></td><td>↑</td></tr>
+<tr><td>UC-06.6</td><td>Edit payout / CPA / ARPU di API report</td><td>Finance, AM</td><td><code>POST /int/pin*</code></td><td>↑</td></tr>
+<tr><td>UC-06.7</td><td>Export CPA / cost / cost-detail</td><td>Finance</td><td><code>GET /int/export*</code></td><td>↑</td></tr>
+<tr><td>UC-06.8</td><td>Fetch ARPU data dari Linkit Dashboard API</td><td>System</td><td><code>GET /int/getdataarpu/</code></td><td>↑</td></tr>
+<tr><td>UC-06.9</td><td>Get / update URL service dalam summary landing</td><td>System</td><td><code>GET/PUT /int/*summarylanding*</code></td><td>↑</td></tr>
+<tr><td><strong>UC-07</strong></td><td><strong>Budget IO & IP Range Management</strong></td><td>AM, Finance, Admin</td><td><code>/v1/management/{budget-io,ipranges}</code> (Auth)</td><td><a href="./docs/UC-07-budget-io-iprange.md">UC-07-budget-io-iprange.md</a></td></tr>
+<tr><td>UC-07.1</td><td>Buat Budget IO</td><td>AM</td><td><code>POST /management/budget-io/</code></td><td>↑</td></tr>
+<tr><td>UC-07.2</td><td>List + filter Budget IO</td><td>AM, Finance</td><td><code>GET /management/budget-io/*</code></td><td>↑</td></tr>
+<tr><td>UC-07.3</td><td>Approve Budget IO</td><td>Finance</td><td>(via list page)</td><td>↑</td></tr>
+<tr><td>UC-07.4</td><td>Upload IP range CSV</td><td>Admin</td><td><code>POST /management/ipranges/upload</code></td><td>↑</td></tr>
+<tr><td>UC-07.5</td><td>Implementasi / aktifkan IP range</td><td>Admin</td><td><code>POST /management/ipranges/implement</code></td><td>↑</td></tr>
+<tr><td>UC-07.6</td><td>Download IP range CSV</td><td>Admin</td><td><code>POST /management/ipranges/download</code></td><td>↑</td></tr>
+<tr><td><strong>UC-08</strong></td><td><strong>RabbitMQ Messaging (RabbitManager)</strong></td><td>System</td><td>Infrastructure / boot-time</td><td><a href="./docs/UC-08-rabbitmq-messaging.md">UC-08-rabbitmq-messaging.md</a></td></tr>
+<tr><td>UC-08.1</td><td>Async publish — fire-and-forget (RTO)</td><td>System</td><td><code>h.RM.PublishWithRetry</code></td><td>↑</td></tr>
+<tr><td>UC-08.2</td><td>Sync RPC publish — Direct Reply-To (RTD)</td><td>System</td><td><code>h.RM.DirectReplyToWithRetry</code></td><td>↑</td></tr>
+<tr><td>UC-08.3</td><td>Auto-reconnect + channel pool management</td><td>System</td><td><code>handleReconnect</code> goroutine</td><td>↑</td></tr>
+<tr><td><strong>UC-09</strong></td><td><strong>Authentication & Authorization</strong></td><td>All</td><td>All protected groups (Auth)</td><td><a href="./docs/UC-09-auth.md">UC-09-auth.md</a></td></tr>
+<tr><td>UC-09.1</td><td>Login → issue JWT</td><td>All</td><td>(Auth service)</td><td>↑</td></tr>
+<tr><td>UC-09.2</td><td>Validate JWT per request</td><td>All</td><td><code>AuthMiddleware</code></td><td>↑</td></tr>
+<tr><td>UC-09.3</td><td>Logout → blacklist JWT di Redis</td><td>All authenticated</td><td>(Auth handler)</td><td>↑</td></tr>
+<tr><td>UC-09.4</td><td>Scope filtering (companies, adnets)</td><td>AM, Finance</td><td><code>c.Locals("companies"/"adnets")</code></td><td>↑</td></tr>
+<tr><td>UC-09.5</td><td>DB schema migration (out-of-band)</td><td>DevOps</td><td><code>./datasource migrate</code> CLI</td><td>—</td></tr>
+</tbody></table>
+<h3>3.2 Use Case Detail</h3>
+
+<h4>UC-01: Postback Intake</h4>
+
+<p><strong>Ref lengkap</strong>: <a href="./docs/UC-01-postback.md">UC-01-postback.md</a></p>
+
+<h5>UC-01.1 — Async Postback (RTO)</h5>
+
+<ul><li><strong>Goal</strong>: Adnet melaporkan event billed/unbilled → trigger downstream ratio worker.</li>
+<li><strong>Trigger</strong>: <code>GET /v1/postback/:urlservicekey/</code> atau <code>GET /v1/postback</code></li>
+<li><strong>Main flow</strong>:</li></ul>
+  1. Parse URL params (urlservicekey, aff_sub/pixel, method, adnet, dll)
+  2. Check cookie dedup — 403 jika duplicate dalam 3 detik window
+  3. Set dedup cookie (3 detik, HttpOnly, SameSite=lax)
+  4. Lookup campaign config dari Redis (<code>{urlservicekey}-configIdx</code>) — 404 jika tidak ada
+  5. Lookup pixel dari Redis (<code>pixelKey</code>) — 404 jika tidak ada
+  6. Cek <code>px.IsUsed</code> — 200 NOK jika sudah dipakai
+  7. <code>corId = "RTO" + GetUniqId()</code> → <code>h.RM.PublishWithRetry(ctx, Ratio exchange, queue, body, corId)</code>
+  8. Return 200 + <code>PixelStorageRsp</code>
+<ul><li><strong>Postcondition</strong>: Worker proses async, tidak reply</li>
+<li><strong>Related entities</strong>: <code>PixelStorage</code>, <code>CampaignDetail</code></li></ul>
+
+<h5>UC-01.2 — Sync Postback Direct Reply-To (RTD)</h5>
+
+<ul><li><strong>Goal</strong>: Adnet hit postback dan sistem <strong>menunggu</strong> reply SHAVED/NOTSHAVED dari worker.</li>
+<li><strong>Trigger</strong>: <code>GET /v1/postback_sync</code></li>
+<li><strong>Main flow</strong>:</li></ul>
+  1. Langkah 1–6 sama dengan UC-01.1
+  2. <code>corId = "RTD" + GetUniqId()</code> → <code>h.RM.DirectReplyToWithRetry(ctx, exchange, queue, body, corId)</code>
+  3. Sistem block menunggu reply di <code>amq.rabbitmq.reply-to</code>
+  4. Worker publish reply ke <code>d.ReplyTo</code> dengan <code>CorrelationId = d.CorrelationId</code>
+  5. Reply diterima: <code>"SHAVED"</code> atau <code>"NOTSHAVED"</code> → handler return sesuai reply
+<ul><li><strong>Edge cases</strong>: Worker tidak reply → context timeout → error. Lihat §8.3.</li></ul>
+
+<h4>UC-02: Campaign Management</h4>
+
+<p><strong>Ref lengkap</strong>: <a href="./docs/UC-02-campaign-management.md">UC-02-campaign-management.md</a></p>
+
+<h5>UC-02.2 — Edit Campaign Parameter</h5>
+
+<ul><li><strong>Goal</strong>: AM update capping/ratio/PO campaign yang sedang berjalan tanpa restart service.</li>
+<li><strong>Trigger</strong>: <code>POST /v1/management/campaign/editratio</code> (atau <code>editmocapping</code>, <code>editpo</code>, <code>editcampaign</code>)</li>
+<li><strong>Main flow</strong>:</li></ul>
+  1. JWT validated → user scope (company/agency)
+  2. Scope check — 403 jika campaign bukan milik company AM
+  3. Update Redis config + DB <code>campaign_details</code>
+  4. Return updated record
+<ul><li><strong>Postcondition</strong>: Redis + DB updated; perubahan berlaku real-time</li></ul>
+
+<h5>UC-02.5 — Send Campaign Data to Worker</h5>
+
+<ul><li><strong>Goal</strong>: AM kirim data kampanye ke worker via RabbitMQ.</li>
+<li><strong>Trigger</strong>: <code>POST /v1/management/campaign/send</code></li>
+<li><strong>Main flow</strong>:</li></ul>
+  1. Parse body JSON (<code>campaignData</code>)
+  2. <code>h.RM.PublishWithRetry(ctx, E_CAMPAIGNMANAGEMENT, Q_CAMPAIGNMANAGEMENT, body, "")</code>
+  3. Return 200 <code>{"message": "Campaign data sent to RabbitMQ"}</code>
+<ul><li><strong>Correlation ID</strong>: kosong (<code>""</code>) — fire-and-forget, no reply</li></ul>
+
+<h4>UC-03: Reporting</h4>
+
+<p><strong>Ref lengkap</strong>: <a href="./docs/UC-03-reporting.md">UC-03-reporting.md</a></p>
+
+<p>Semua endpoint reporting auth-gated. Scope filtering via JWT claims <code>companies</code> + <code>adnets</code>.</p>
+
+<h5>UC-03.15 — Resend Data ke Linkit Dashboard</h5>
+
+<ul><li><strong>Goal</strong>: Operations resend data summary yang gagal terkirim ke Linkit Dashboard.</li>
+<li><strong>Trigger</strong>: <code>POST /v1/report/resend-data</code></li>
+<li><strong>Main flow</strong>:</li></ul>
+  1. Parse form: <code>total</code>, <code>id[0..N]</code>
+  2. <code>GetSummaryReportById(ids)</code> → <code>[]SummaryCampaign</code>
+  3. Untuk setiap record: build URL + <code>h.RM.PublishWithRetry(ctx, "E_RESENDCAMPAIGNDATA", "Q_RESENDCAMPAIGNDATA", msg, "")</code>
+  4. Return <code>{status: "OK"/"NOK", error: ""}</code>
+
+<h4>UC-04: User, Role & Menu Management</h4>
+
+<p><strong>Ref lengkap</strong>: <a href="./docs/UC-04-user-role-menu.md">UC-04-user-role-menu.md</a></p>
+
+<p>Standard CRUD via REST. Admin only. Approval flow untuk registrasi user baru.</p>
+
+<h4>UC-05: Country, Service & Catalog</h4>
+
+<p><strong>Ref lengkap</strong>: <a href="./docs/UC-05-country-service-catalog.md">UC-05-country-service-catalog.md</a></p>
+
+<p>Master data yang menjadi referensi saat create/edit campaign. ~50+ endpoints CRUD.</p>
+
+<h4>UC-06: Internal Endpoints & Admin Tools</h4>
+
+<p><strong>Ref lengkap</strong>: <a href="./docs/UC-06-internal-endpoints.md">UC-06-internal-endpoints.md</a></p>
+
+<p>Endpoint internal untuk mutasi data transaksional dan tools admin. Auth required, tidak diakses public.</p>
+
+<h4>UC-07: Budget IO & IP Range</h4>
+
+<p><strong>Ref lengkap</strong>: <a href="./docs/UC-07-budget-io-iprange.md">UC-07-budget-io-iprange.md</a></p>
+
+<p>Budget IO: buat → approval → monitoring. IP Range: upload CSV → implement → download.</p>
+
+<h4>UC-08: RabbitMQ Messaging (RabbitManager)</h4>
+
+<p><strong>Ref lengkap</strong>: <a href="./docs/UC-08-rabbitmq-messaging.md">UC-08-rabbitmq-messaging.md</a></p>
+
+<p>Infrastructure layer untuk semua publish ke RabbitMQ. Diinisialisasi saat boot di <code>server.go</code>.</p>
+
+<pre><code class="language-go">// Async (RTO) — fire-and-forget
+corId := "RTO" + external.GetUniqId(h.Config.TZ)
+h.RM.PublishWithRetry(ctx, exchange, queue, body, corId)
+
+// Sync RPC (RTD) — tunggu reply worker
+corId := "RTD" + external.GetUniqId(h.Config.TZ)
+reply, err := h.RM.DirectReplyToWithRetry(ctx, exchange, queue, body, corId)</code></pre>
+
+<h4>UC-09: Authentication & Authorization</h4>
+
+<p><strong>Ref lengkap</strong>: <a href="./docs/UC-09-auth.md">UC-09-auth.md</a></p>
+
+<p>JWT HS256. <code>AUTH_ENFORCE_DEFAULT=true</code> mengaktifkan group-level <code>AuthMiddleware</code>. Logout via Redis blacklist <code>jwt:blacklist:{jti}</code>.</p>
+
+<hr>
+
+<h2>4. API Contract</h2>
+
+<h3>4.1 Base & Versioning</h3>
+
+<ul><li>Base path: <code>/v1</code></li>
+<li>Versi mayor: path-based (<code>/v1</code>, <code>/v2</code> future)</li>
+<li>Fiber default 100 MB body limit (<code>BodyLimit: 100*1024*1024</code>)</li>
+<li>Content-Type: <code>application/json</code> (default)</li>
+<li>File upload: <code>multipart/form-data</code> (Excel/CSV upload)</li></ul>
+
+<h3>4.2 Authentication</h3>
+
+<p><strong>Public endpoints</strong> (no auth): <ul><li><code>GET /v1/postback/:urlservicekey/</code></li> <li><code>GET /v1/postback</code></li> <li><code>GET /v1/postback_billed</code></li> <li><code>GET /v1/postback_sync</code></li> <li><code>GET /v1/inquire/campid</code></li> <li><code>GET /v1/inquire/api-campid</code></li> <li><code>/v1/ext/*</code> (placeholder)</li></ul></p>
+
+<p><strong>Authenticated endpoints</strong>: Header <code>Authorization: Bearer &lt;JWT&gt;</code>. Algorithm HS256. Required claims:</p>
+
+<pre><code class="language-json">{
   "sub": 123,
   "jti": "uuid-...",
   "type": "access",
   "exp": 1700000000,
   "nbf": 1699999999,
   "aud": "mediaplatform",
-  "iss": "auth.linkit"
+  "iss": "auth.linkit",
+  "companies": ["company_a"],
+  "adnets": ["adnet_x"]
 }</code></pre>
 
-      <h3>4.3 Endpoint Groups</h3>
-      <table>
-        <thead><tr><th>Group</th><th>Path</th><th>Auth</th><th>Owner</th></tr></thead>
-        <tbody>
-          <tr><td>Public postback</td><td><code>/v1/postback*</code>, <code>/v1/inquire/campid</code></td><td><span class="badge badge-public">PUBLIC</span></td><td>Adnet integration</td></tr>
-          <tr><td>Dashboard</td><td><code>/dashboard/*</code></td><td><span class="badge badge-auth">AUTH</span></td><td>All authenticated</td></tr>
-          <tr><td>Reports</td><td><code>/v1/report/*</code></td><td><span class="badge badge-auth">AUTH</span></td><td>AM, Ops, Finance</td></tr>
-          <tr><td>Internal API</td><td><code>/v1/int/*</code></td><td><span class="badge badge-auth">AUTH</span></td><td>Backend integration</td></tr>
-          <tr><td>Management</td><td><code>/v1/management/*</code></td><td><span class="badge badge-auth">AUTH</span></td><td>Admin, AM, Finance</td></tr>
-          <tr><td>External</td><td><code>/v1/ext/*</code></td><td>placeholder</td><td>TBD</td></tr>
-        </tbody>
-      </table>
+Failure response:
+<pre><code class="language-json">{ "error": "Invalid token" }</code></pre>
 
-      <h3>4.4 Endpoint Reference</h3>
+<h3>4.3 Endpoint Groups</h3>
 
-      <details open>
-        <summary>Reports (<code>/v1/report</code>)</summary>
-        <table>
-          <thead><tr><th>Method</th><th>Path</th><th>Handler</th></tr></thead>
-          <tbody>
-            <tr><td>GET</td><td><code>/pinreport</code></td><td>DisplayPinReport</td></tr>
-            <tr><td>GET</td><td><code>/datasentapiperformance</code></td><td>DisplayPinPerformanceReport</td></tr>
-            <tr><td>GET</td><td><code>/cpareportlist</code></td><td>DisplayCPAReport</td></tr>
-            <tr><td>GET</td><td><code>/costreport/:v</code></td><td>DisplayCostReport</td></tr>
-            <tr><td>GET</td><td><code>/conversionlog</code></td><td>DisplayConversionLogReport</td></tr>
-            <tr><td>GET</td><td><code>/campaign-monitoring-summary</code></td><td>DisplayCampaignSummary</td></tr>
-            <tr><td>GET</td><td><code>/campaign-monitoring-summary/chart</code></td><td>DisplayCampaignSummaryChart</td></tr>
-            <tr><td>GET</td><td><code>/alertreport/:v</code></td><td>DisplayAlertReportAll</td></tr>
-            <tr><td>GET</td><td><code>/trafficreport</code></td><td>DisplayTrafficReport</td></tr>
-            <tr><td>GET</td><td><code>/trafficreport/chart</code></td><td>GetTrafficReportChart</td></tr>
-            <tr><td>GET</td><td><code>/mainstreamreport</code></td><td>DisplayMainstreamReport</td></tr>
-            <tr><td>GET</td><td><code>/google-traffic-report</code></td><td>DisplayGoogleTrafficReport</td></tr>
-            <tr><td>GET</td><td><code>/budgetmonitoring</code></td><td>DisplayBudgetMonitoring</td></tr>
-            <tr><td>GET</td><td><code>/performance-report</code></td><td>DisplayPerformanceReport</td></tr>
-            <tr><td>GET</td><td><code>/revenuemonitoring</code></td><td>DisplayRevenueMonitoring</td></tr>
-            <tr><td>GET</td><td><code>/revenuemonitoring/chart</code></td><td>DisplayRevenueMonitoringChart</td></tr>
-            <tr><td>GET</td><td><code>/redirectiontime</code></td><td>DisplayRedirectionTime</td></tr>
-            <tr><td>GET</td><td><code>/ioreport</code></td><td>DisplaySummaryBudgetIO</td></tr>
-            <tr><td>GET</td><td><code>/campaign-spending-channel</code></td><td>DisplayCampaignSpendingChannel</td></tr>
-            <tr><td>GET</td><td><code>/campaign-spending-channel/country-children</code></td><td>DisplayCampaignSpendingChannelCountryChildren</td></tr>
-            <tr><td>POST</td><td><code>/resend-data</code></td><td>ResendData</td></tr>
-            <tr><td>POST</td><td><code>/resend-data-apireport</code></td><td>ResendDataAPIReport</td></tr>
-            <tr><td>POST</td><td><code>/campaign-monitoring-summary/edit-target-budget</code></td><td>EditTargetBudget</td></tr>
-          </tbody>
-        </table>
-      </details>
+<table>
+<thead><tr><th>Group</th><th>Path</th><th>Auth</th><th>Owner</th></tr>
+</thead>
+<tbody>
+<tr><td>Public postback</td><td><code>/v1/postback*</code>, <code>/v1/inquire/*</code></td><td>None</td><td>Adnet integration</td></tr>
+<tr><td>Dashboard</td><td><code>/dashboard/*</code></td><td>Required</td><td>All authenticated</td></tr>
+<tr><td>Reports</td><td><code>/v1/report/*</code></td><td>Required</td><td>AM, Operations, Finance</td></tr>
+<tr><td>Internal API</td><td><code>/v1/int/*</code></td><td>Required</td><td>Backend integration</td></tr>
+<tr><td>Management</td><td><code>/v1/management/*</code></td><td>Required</td><td>Admin, AM, Finance</td></tr>
+<tr><td>External</td><td><code>/v1/ext/*</code></td><td>(placeholder)</td><td>TBD</td></tr>
+</tbody></table>
+<h3>4.4 Endpoint Reference (per group)</h3>
 
-      <details>
-        <summary>Management (<code>/v1/management/*</code>) — sub-groups: campaign, campaign-setting, menu, role, user, userlog, budget-io, country-service, ipranges (~120 endpoints)</summary>
-        <p>Pattern CRUD standar:</p>
-        <ul>
-          <li><code>GET /resource</code> → list</li>
-          <li><code>GET /resource/:id</code> → detail</li>
-          <li><code>POST /resource</code> → create</li>
-          <li><code>PUT /resource/:id</code> → update</li>
-          <li><code>DELETE /resource/:id</code> → soft delete</li>
-        </ul>
-        <p>Lihat <code>src/app/routes/management.go</code> untuk lengkap.</p>
-      </details>
+<h4>4.4.1 Postback (<code>/v1</code> — Public)</h4>
 
-      <h3>4.5 Standard Response Envelope</h3>
-      <pre><code>{
+<table>
+<thead><tr><th>Method</th><th>Path</th><th>Handler</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>GET</td><td><code>/postback/:urlservicekey/</code></td><td><code>Postback</code></td><td>Postback v1 via path param</td></tr>
+<tr><td>GET</td><td><code>/postback</code></td><td><code>PostbackV3</code></td><td>Postback v3 via query params</td></tr>
+<tr><td>GET</td><td><code>/postback_billed</code></td><td><code>PostbackBilled</code></td><td>Postback billed event</td></tr>
+<tr><td>GET</td><td><code>/postback_sync</code></td><td><code>PostbackDirectReply</code></td><td><strong>[NEW]</strong> Postback sync — Direct Reply-To (RTD)</td></tr>
+<tr><td>GET</td><td><code>/inquire/campid</code></td><td><code>InquiryCampID</code></td><td>Inquiry campaign ID</td></tr>
+<tr><td>GET</td><td><code>/inquire/api-campid</code></td><td><code>InquiryAPICampID</code></td><td>Inquiry campaign ID (API channel)</td></tr>
+</tbody></table>
+<h4>4.4.2 Reports (<code>/v1/report</code>)</h4>
+
+<table>
+<thead><tr><th>Method</th><th>Path</th><th>Handler</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>GET</td><td><code>/pinreport</code></td><td><code>DisplayPinReport</code></td><td>Pin report summary</td></tr>
+<tr><td>GET</td><td><code>/datasentapiperformance</code></td><td><code>DisplayPinPerformanceReport</code></td><td>API performance report</td></tr>
+<tr><td>GET</td><td><code>/cpareportlist</code></td><td><code>DisplayCPAReport</code></td><td>CPA report list</td></tr>
+<tr><td>GET</td><td><code>/costreport/:v</code></td><td><code>DisplayCostReport</code></td><td>Cost report (detail/list mode via <code>:v</code>)</td></tr>
+<tr><td>GET</td><td><code>/conversionlog</code></td><td><code>DisplayConversionLogReport</code></td><td>Conversion log per service</td></tr>
+<tr><td>GET</td><td><code>/campaign-monitoring-summary</code></td><td><code>DisplayCampaignSummary</code></td><td>Campaign summary</td></tr>
+<tr><td>GET</td><td><code>/campaign-monitoring-summary/chart</code></td><td><code>DisplayCampaignSummaryChart</code></td><td>Chart data</td></tr>
+<tr><td>GET</td><td><code>/alertreport/:v</code></td><td><code>DisplayAlertReportAll</code></td><td>Alert report</td></tr>
+<tr><td>GET</td><td><code>/trafficreport</code></td><td><code>DisplayTrafficReport</code></td><td>Traffic</td></tr>
+<tr><td>GET</td><td><code>/trafficreport/chart</code></td><td><code>GetTrafficReportChart</code></td><td>Traffic chart</td></tr>
+<tr><td>GET</td><td><code>/mainstreamreport</code></td><td><code>DisplayMainstreamReport</code></td><td>Mainstream</td></tr>
+<tr><td>GET</td><td><code>/google-traffic-report</code></td><td><code>DisplayGoogleTrafficReport</code></td><td>Google traffic</td></tr>
+<tr><td>GET</td><td><code>/budgetmonitoring</code></td><td><code>DisplayBudgetMonitoring</code></td><td>Budget monitoring</td></tr>
+<tr><td>GET</td><td><code>/performance-report</code></td><td><code>DisplayPerformanceReport</code></td><td>Performance</td></tr>
+<tr><td>GET</td><td><code>/revenuemonitoring</code></td><td><code>DisplayRevenueMonitoring</code></td><td>Revenue list</td></tr>
+<tr><td>GET</td><td><code>/revenuemonitoring/chart</code></td><td><code>DisplayRevenueMonitoringChart</code></td><td>Revenue chart</td></tr>
+<tr><td>GET</td><td><code>/defaultinput/</code></td><td><code>DisplayDefaultInput</code></td><td>Default input values</td></tr>
+<tr><td>GET</td><td><code>/redirectiontime</code></td><td><code>DisplayRedirectionTime</code></td><td>Redirection time</td></tr>
+<tr><td>GET</td><td><code>/ioreport</code></td><td><code>DisplaySummaryBudgetIO</code></td><td>IO report</td></tr>
+<tr><td>PUT</td><td><code>/ioreport/update</code></td><td><code>UpdateSummaryBudgetIO</code></td><td>Update IO report</td></tr>
+<tr><td>GET</td><td><code>/campaign-spending-channel</code></td><td><code>DisplayCampaignSpendingChannel</code></td><td>Spending per channel</td></tr>
+<tr><td>GET</td><td><code>/campaign-spending-channel/country-children</code></td><td><code>DisplayCampaignSpendingChannelCountryChildren</code></td><td>Drill-down</td></tr>
+<tr><td>POST</td><td><code>/resend-data</code></td><td><code>ResendData</code></td><td>Resend summary ke Linkit Dashboard via RabbitMQ</td></tr>
+<tr><td>POST</td><td><code>/resend-data-apireport</code></td><td><code>ResendDataAPIReport</code></td><td>Resend API report ke Linkit Dashboard</td></tr>
+<tr><td>POST</td><td><code>/campaign-monitoring-summary/edit-target-budget</code></td><td><code>EditTargetBudgetLevel</code></td><td>Edit target budget</td></tr>
+<tr><td>POST</td><td><code>/campaign-monitoring-summary/edit-target-budget-batch</code></td><td><code>EditTargetBudgetBatch</code></td><td><strong>[NEW]</strong> Bulk edit target budget</td></tr>
+</tbody></table>
+<h4>4.4.3 Management (<code>/v1/management</code>)</h4>
+
+<p>Sub-groups: <code>/campaign</code>, <code>/campaign-setting</code>, <code>/menu</code>, <code>/role</code>, <code>/user</code>, <code>/userlog</code>, <code>/budget-io</code>, <code>/country-service</code>, <code>/ipranges</code>. Total ~120 endpoints. Lihat <a href="src/interfaces/http/routes/management.go"><code>src/interfaces/http/routes/management.go</code></a> untuk lengkap.</p>
+
+<p>Pattern CRUD standar: <ul><li><code>GET /resource</code> → list</li> <li><code>GET /resource/:id</code> → detail</li> <li><code>POST /resource</code> → create</li> <li><code>PUT /resource/:id</code> → update</li> <li><code>DELETE /resource/:id</code> → soft delete</li></ul></p>
+
+<p>Key endpoints:</p>
+
+<table>
+<thead><tr><th>Method</th><th>Path</th><th>Handler</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>POST</td><td><code>/campaign/send</code></td><td><code>SendCampaignHandler</code></td><td>Kirim data ke worker via RabbitMQ (<code>h.RM.PublishWithRetry</code>)</td></tr>
+<tr><td>POST</td><td><code>/campaign/editratio</code></td><td><code>EditCampaignRatio</code></td><td>Edit ratio send/receive</td></tr>
+<tr><td>POST</td><td><code>/campaign/editmocapping</code></td><td><code>EditCampaignMOCapping</code></td><td>Edit MO capping</td></tr>
+<tr><td>POST</td><td><code>/campaign/editpo</code></td><td><code>EditCampaignPO</code></td><td>Edit PO + recalculate CPA</td></tr>
+<tr><td>POST</td><td><code>/campaign/updatestatus</code></td><td><code>UpdateStatusCampaign</code></td><td>Toggle active/inactive</td></tr>
+</tbody></table>
+<h4>4.4.4 Internal (<code>/v1/int</code>)</h4>
+
+<table>
+<thead><tr><th>Method</th><th>Path</th><th>Handler</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>PUT</td><td><code>/setdata/:v/</code></td><td><code>SetData</code></td><td>Set target daily budget</td></tr>
+<tr><td>PUT</td><td><code>/updatedata/:v/</code></td><td><code>UpdateAgencyFeeAndCostConversion</code></td><td>Update agency fee & cost</td></tr>
+<tr><td>PUT</td><td><code>/updateratio/:v/</code></td><td><code>UpdateRatio</code></td><td>Update ratio</td></tr>
+<tr><td>PUT</td><td><code>/updatepostback/:v/</code></td><td><code>UpdatePostback</code></td><td>Update postback</td></tr>
+<tr><td>POST</td><td><code>/uploadexcel</code></td><td><code>UploadExcel</code></td><td>Upload Excel SMS campaign</td></tr>
+<tr><td>PUT</td><td><code>/upsertexcel/</code></td><td><code>UpsertExcel</code></td><td>Upsert Excel SMS campaign</td></tr>
+<tr><td>GET</td><td><code>/getdataarpu/</code></td><td><code>GetDataArpu</code></td><td>Fetch ARPU data</td></tr>
+<tr><td>GET</td><td><code>/get_urlservice_in_summarylanding</code></td><td><code>GetURLServiceInSummaryLanding</code></td><td>Get URL service total load time</td></tr>
+<tr><td>PUT</td><td><code>/update_response_url_service_in_summarylanding</code></td><td><code>UpdateResponseURLServiceInSummaryLanding</code></td><td>Update URL service response</td></tr>
+</tbody></table>
+<h3>4.5 Standard Response Envelope</h3>
+
+<pre><code class="language-json">// Success
+{
   "code": 200,
   "desc": "OK",
   "data": { }
-}</code></pre>
-      <pre><code>{
+}
+
+// Success with DataTable
+{
+  "draw": 1,
+  "code": 200,
+  "desc": "OK",
+  "data": [...],
+  "recordsTotal": 100,
+  "recordsFiltered": 100
+}
+
+// Error
+{
   "code": 400,
   "desc": "Bad Request",
   "error": "validation message"
 }</code></pre>
-    </section>
 
-    <!-- 5. DATA MODEL -->
-    <section id="data">
-      <h2>5. Data Model</h2>
+<hr>
 
-      <h3>5.1 Domain Aggregates</h3>
-      <table>
-        <thead><tr><th>Aggregate Root</th><th>Entities</th></tr></thead>
-        <tbody>
-          <tr><td><strong>Campaign</strong></td><td>Campaign, CampaignDetail, IncSummaryCampaign(Hour), SummaryCampaign(Billing)</td></tr>
-          <tr><td><strong>Tracking</strong></td><td>DataTraffic, DataLanding, DataClicked, DataRedirect, MO, PixelStorage, ClickStorage, Postback</td></tr>
-          <tr><td><strong>Reporting</strong></td><td>ApiPinReport, ApiPinPerformance, SummaryMo, SummaryCr, SummaryCapping, SummaryRatio, SummaryLanding, SummaryTraffic, SummaryDashboard</td></tr>
-          <tr><td><strong>Budget</strong></td><td>TargetBudget, TargetBudgetDetail, BudgetIO, SummaryBudgetIO</td></tr>
-          <tr><td><strong>Master Data</strong></td><td>Country, Continent, Company, CompanyGroup, Domain, DomainService, Operator, Partner, Service, AdnetList, Agency, Channel, MainstreamGroup, OperatorAlias, IPRange, IPRangeCsvRow, LpDesignType</td></tr>
-          <tr><td><strong>User & Access</strong></td><td>User, DetailUser, UserCompany, UserAdnet, Role, Permission, Menu, CcEmail, Email, HistoryCappingKey</td></tr>
-        </tbody>
-      </table>
+<h2>5. Data Model</h2>
 
-      <h3>5.2 Sample Schema (TargetBudget)</h3>
-      <pre><code>type TargetBudget struct {
+<h3>5.1 Domain Aggregates (high-level)</h3>
+
+<table>
+<thead><tr><th>Aggregate Root</th><th>Entities</th><th>File</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Campaign</strong></td><td>Campaign, CampaignDetail, IncSummaryCampaign, IncSummaryCampaignHour, SummaryCampaign, SummaryCampaignBilling</td><td><code>entity/campaign_detail.go</code>, <code>entity/inc_summary_campaigns.go</code>, <code>entity/campaignsummary.go</code></td></tr>
+<tr><td><strong>Tracking</strong></td><td>DataTraffic, DataLanding, DataClicked, DataRedirect, MO, PixelStorage, ClickStorage, Postback</td><td><code>entity/traffic.go</code>, <code>entity/postback.go</code>, <code>entity/dashboard.go</code></td></tr>
+<tr><td><strong>Reporting</strong></td><td>ApiPinReport, ApiPinPerformance, SummaryMo, SummaryCr, SummaryCapping, SummaryRatio, SummaryLanding, SummaryTraffic, SummaryDashboard, CostReport, DisplayCPAReport</td><td><code>entity/apireport.go</code>, <code>entity/dashboard.go</code></td></tr>
+<tr><td><strong>Budget</strong></td><td>TargetBudget, TargetBudgetDetail, BudgetIO, SummaryBudgetIO</td><td><code>entity/target_budget.go</code>, <code>entity/budgetio.go</code></td></tr>
+<tr><td><strong>Master Data</strong></td><td>Country, Continent, Company, CompanyGroup, Domain, DomainService, Operator, Partner, Service, AdnetList, Agency, Channel, MainstreamGroup, OperatorAlias, IPRange, IPRangeCsvRow, LpDesignType</td><td><code>entity/table.go</code></td></tr>
+<tr><td><strong>User & Access</strong></td><td>User, DetailUser, UserCompany, UserAdnet, Role, Permission, Menu, CcEmail, Email, HistoryCappingKey</td><td><code>entity/usermanagement.go</code>, <code>entity/rolemanagement.go</code>, <code>entity/userlog.go</code></td></tr>
+</tbody></table>
+<h3>5.2 Sample Schema (TargetBudget)</h3>
+
+<pre><code class="language-go">type TargetBudget struct {
     ID                uint           `gorm:"primaryKey"`
     Date              time.Time
     Service           string
@@ -605,278 +573,377 @@
     DeletedAt         gorm.DeletedAt `gorm:"index"`
 }</code></pre>
 
-      <h3>5.3 Migration Strategy</h3>
-      <ul>
-        <li><strong>Authoritative</strong>: AutoMigrate via <code>./datasource migrate</code> (run-once)</li>
-        <li><strong>Entity registration</strong>: <code>src/cmd/migrate.go</code> — <code>migrateEntities</code> slice</li>
-        <li><strong>Add new entity</strong>:
-          <ol>
-            <li>Buat di <code>src/domain/entity/</code></li>
-            <li>Tambah ke <code>migrateEntities</code></li>
-            <li>Jalankan <code>./datasource migrate</code></li>
-          </ol>
-        </li>
-        <li><strong>Production</strong>: wajib via init-container atau CI step. Server cmd tidak menjalankan migrasi.</li>
-      </ul>
+<h3>5.3 Migration Strategy</h3>
 
-      <h3>5.4 Cache Layer (Redis)</h3>
-      <table>
-        <thead><tr><th>Key Pattern</th><th>TTL</th><th>Purpose</th></tr></thead>
-        <tbody>
-          <tr><td><code>jwt:blacklist:&lt;jti&gt;</code></td><td>sisa exp</td><td>JWT revocation list</td></tr>
-          <tr><td>Pixel cache (DB <code>RedisCachePixel</code>)</td><td><code>RedisKeyExpiration</code> (default 600s)</td><td>Pixel postback dedup</td></tr>
-          <tr><td>RedisJSON (DB <code>RedisDBIndex</code>)</td><td>varies</td><td>IP range, capping counter</td></tr>
-          <tr><td>HistoryCappingKey related</td><td>reset oleh cron</td><td>Daily capping reset</td></tr>
-        </tbody>
-      </table>
-    </section>
+<ul><li><strong>Authoritative</strong>: AutoMigrate via <code>./datasource migrate</code> sub-command (run-once container)</li>
+<li><strong>Entity registration</strong>: <code>src/cmd/migrate.go</code> — <code>migrateEntities</code> slice</li>
+<li><strong>Add new entity</strong>: 1) buat di <code>src/domain/entity/</code>, 2) tambah ke <code>migrateEntities</code>, 3) jalankan <code>./datasource migrate</code></li>
+<li><strong>Production</strong>: Wajib via init-container atau CI step. Jangan rely on app startup.</li></ul>
 
-    <!-- 6. CONSTRAINTS -->
-    <section id="constraints">
-      <h2>6. Constraints</h2>
+<h3>5.4 Cache Layer (Redis)</h3>
 
-      <h3>6.1 Functional Constraints</h3>
-      <table>
-        <thead><tr><th>ID</th><th>Constraint</th><th>Rationale</th></tr></thead>
-        <tbody>
-          <tr><td>FC-01</td><td>JWT wajib HS256</td><td>Hindari algorithm confusion (CWE-327)</td></tr>
-          <tr><td>FC-02</td><td>JWT <code>type</code> wajib <code>"access"</code></td><td>Pisahkan access vs refresh token</td></tr>
-          <tr><td>FC-03</td><td><code>aud</code> &amp; <code>iss</code> validation kalau env diset</td><td>Multi-tenant token isolation</td></tr>
-          <tr><td>FC-04</td><td>TLS verify default; opt-in disable hanya non-prod</td><td>CWE-295 fix</td></tr>
-          <tr><td>FC-05</td><td>AES key min 16/24/32 byte</td><td>AES-128/192/256 correctness</td></tr>
-          <tr><td>FC-06</td><td>Postback endpoint public — auth via signed params/IP allowlist</td><td>Adnet callback gak bisa kirim Bearer</td></tr>
-          <tr><td>FC-07</td><td>Body limit max 100 MB</td><td>Excel upload</td></tr>
-          <tr><td>FC-08</td><td>Group-level AuthMiddleware default</td><td>Default-secure, gated <code>AUTH_ENFORCE_DEFAULT</code></td></tr>
-        </tbody>
-      </table>
+<table>
+<thead><tr><th>Key pattern</th><th>DB Index</th><th>TTL</th><th>Purpose</th></tr>
+</thead>
+<tbody>
+<tr><td><code>jwt:blacklist:&lt;jti&gt;</code></td><td><code>REDISDBINDEX</code> (0)</td><td>sisa exp</td><td>JWT revocation list</td></tr>
+<tr><td><code>{urlservicekey}-configIdx</code></td><td><code>REDISDBINDEX</code> (0)</td><td>varies</td><td>Campaign config (JSON)</td></tr>
+<tr><td><code>{urlservicekey}-counterIdx</code></td><td><code>REDISDBINDEX</code> (0)</td><td>varies</td><td>MO/traffic counter</td></tr>
+<tr><td><code>{urlservicekey}-summary</code></td><td><code>REDISDBINDEX</code> (0)</td><td>varies</td><td>Campaign summary</td></tr>
+<tr><td>Pixel cache key</td><td><code>REDISCACHEPIXEL</code> (1)</td><td><code>RedisKeyExpiration</code> (default 600s)</td><td>Pixel postback dedup</td></tr>
+<tr><td><code>HistoryCappingKey</code> related</td><td><code>REDISDBINDEX</code> (0)</td><td>reset oleh cron</td><td>Daily capping reset</td></tr>
+</tbody></table>
+<hr>
 
-      <h3>6.2 Non-Functional</h3>
-      <table>
-        <thead><tr><th>ID</th><th>Constraint</th><th>Target</th></tr></thead>
-        <tbody>
-          <tr><td>NFC-01</td><td>DB pool max open conn</td><td><code>DB_MAX_OPEN_CONNS × replicas ≤ PG max_connections</code></td></tr>
-          <tr><td>NFC-02</td><td>DB connection lifetime</td><td>30 min default</td></tr>
-          <tr><td>NFC-03</td><td>Redis fail-fast vs degraded</td><td><code>REDIS_REQUIRED=true</code> default</td></tr>
-          <tr><td>NFC-04</td><td>RabbitMQ reconnect</td><td>Goroutine watch <code>NotifyClose</code></td></tr>
-          <tr><td>NFC-05</td><td>HTTP outbound timeout</td><td>Per-call <code>helper.PHttp</code></td></tr>
-          <tr><td>NFC-06</td><td>Server tidak run schema migration</td><td>Pakai <code>migrate</code> sub-cmd</td></tr>
-          <tr><td>NFC-07</td><td>Logs redact secrets</td><td><code>Cfg.Redacted()</code></td></tr>
-          <tr><td>NFC-08</td><td>Build verifiable di Go 1.24.1</td><td>Dockerfile pin</td></tr>
-        </tbody>
-      </table>
+<h2>6. Messaging (RabbitMQ)</h2>
 
-      <h3>6.3 Operational</h3>
-      <ul>
-        <li><strong>OC-01</strong>: Multi-replica deploy → migrate run-once → server start</li>
-        <li><strong>OC-02</strong>: Tag <code>v*.*.*</code> → CI auto-build 2 image (server + migrate)</li>
-        <li><strong>OC-03</strong>: <code>.env</code> tidak di-commit (di <code>.gitignore</code>)</li>
-        <li><strong>OC-04</strong>: <code>AES_SECRET_KEY</code> wajib via secret manager di prod</li>
-        <li><strong>OC-05</strong>: External tool (<code>golang-migrate</code>) recommended jangka panjang</li>
-      </ul>
-    </section>
+<h3>6.1 RabbitManager — New Publisher (2026-06-05)</h3>
 
-    <!-- 7. EDGE CASES -->
-    <section id="edge">
-      <h2>7. Edge Cases</h2>
+<p>Package: <code>src/infrastructure/messaging/rabbitmq.go</code></p>
 
-      <h3>7.1 Auth</h3>
-      <table>
-        <thead><tr><th>Case</th><th>Behavior</th></tr></thead>
-        <tbody>
-          <tr><td>Missing <code>Authorization</code></td><td>401 <code>Missing or invalid token</code></td></tr>
-          <tr><td>Format selain <code>Bearer &lt;token&gt;</code></td><td>401</td></tr>
-          <tr><td><code>JWT_SECRET</code> not set</td><td>500 <code>JWT secret not configured</code></td></tr>
-          <tr><td>Token expired</td><td>401 <code>Token expired</code></td></tr>
-          <tr><td><code>nbf</code> di future</td><td>401 (30s leeway)</td></tr>
-          <tr><td><code>aud</code>/<code>iss</code> mismatch</td><td>401</td></tr>
-          <tr><td><code>type</code> ≠ "access"</td><td>401</td></tr>
-          <tr><td><code>jti</code> di blacklist</td><td>401 <code>Token revoked</code></td></tr>
-          <tr><td>Redis nil saat blacklist check</td><td>Skip (degraded)</td></tr>
-          <tr><td><code>sub</code> invalid format</td><td>401</td></tr>
-        </tbody>
-      </table>
+<table>
+<thead><tr><th>Method</th><th>Use When</th><th>Correlation ID Prefix</th></tr>
+</thead>
+<tbody>
+<tr><td><code>h.RM.PublishWithRetry(ctx, exchange, queue, body, corId)</code></td><td>Async fire-and-forget</td><td><code>RTO</code></td></tr>
+<tr><td><code>h.RM.DirectReplyToWithRetry(ctx, exchange, queue, body, corId)</code></td><td>Sync RPC — tunggu reply worker</td><td><code>RTD</code></td></tr>
+</tbody></table>
+<blockquote><strong>Deprecated</strong>: <code>h.Rmqp.PublishMsg(rmqp.PublishItems{...})</code> — <strong>jangan digunakan</strong> di handler baru.</blockquote>
 
-      <h3>7.2 Postback</h3>
-      <table>
-        <thead><tr><th>Case</th><th>Behavior</th></tr></thead>
-        <tbody>
-          <tr><td>Duplicate postback dlm 600s</td><td>Idempotent: dedup via Redis cache</td></tr>
-          <tr><td>MSISDN format invalid</td><td>400 + log</td></tr>
-          <tr><td>Campaign ID tidak ditemukan</td><td>200 dgn flag — adnet jangan retry</td></tr>
-          <tr><td>Capping tercapai</td><td>Tetap record, mark capped</td></tr>
-        </tbody>
-      </table>
+<h3>6.2 Queue & Exchange Declarations (boot-time)</h3>
 
-      <h3>7.3 HTTP Helper (post-fix #2)</h3>
-      <table>
-        <thead><tr><th>Case</th><th>Behavior</th></tr></thead>
-        <tbody>
-          <tr><td><code>httpClient.Do</code> error</td><td>Wrapped error, tidak akses <code>response.Status</code></td></tr>
-          <tr><td><code>response == nil</code></td><td>Explicit nil-check, return error</td></tr>
-          <tr><td>Non-OK status</td><td>Return real status + error wrapped</td></tr>
-        </tbody>
-      </table>
+<table>
+<thead><tr><th>Exchange</th><th>Queue</th><th>Declared By</th><th>Publisher</th></tr>
+</thead>
+<tbody>
+<tr><td><code>RABBITMQRATIOEXCHANGENAME</code></td><td><code>RABBITMQRATIOQUEUENAME</code></td><td><code>server.go</code> (Rmqp + RM)</td><td>Postback handlers</td></tr>
+<tr><td><code>RABBITMQCAMPAIGNMANAGEMENTEXCHANGENAME</code></td><td><code>RABBITMQCAMPAIGNMANAGEMENTQUEUENAME</code></td><td><code>server.go</code> (Rmqp + RM)</td><td>Campaign send handler</td></tr>
+<tr><td><code>E_RESENDCAMPAIGNDATA</code></td><td><code>Q_RESENDCAMPAIGNDATA</code></td><td><code>server.go</code> (Rmqp + RM)</td><td>ResendData handlers</td></tr>
+<tr><td><code>RABBITMQPIXELSTORAGEEXCHANGENAME</code></td><td><code>RABBITMQPIXELSTORAGEQUEUENAME</code></td><td><code>server.go</code> (Rmqp)</td><td>Legacy pixel storage</td></tr>
+<tr><td><code>RABBITMQCLICKSTORAGEEXCHANGENAME</code></td><td><code>RABBITMQCLICKSTORAGEQUEUENAME</code></td><td><code>server.go</code> (Rmqp)</td><td>Legacy click storage</td></tr>
+</tbody></table>
+<h3>6.3 Correlation ID Convention</h3>
 
-      <h3>7.4 DB / Pool</h3>
-      <table>
-        <thead><tr><th>Case</th><th>Behavior</th></tr></thead>
-        <tbody>
-          <tr><td>PG <code>max_connections</code> saturated</td><td>Pool throttle (block sampai available)</td></tr>
-          <tr><td>Connection lifetime exceeded</td><td>GORM auto-recreate</td></tr>
-          <tr><td>AutoMigrate timeout</td><td><code>log.Fatalf</code> — operator investigate</td></tr>
-        </tbody>
-      </table>
+<pre><code class="language-">RTOxxxx  →  Async (fire-and-forget). Worker proses, TIDAK reply.
+RTDxxxx  →  Sync RPC. Worker WAJIB reply ke d.ReplyTo dengan CorrelationId matching.</code></pre>
 
-      <h3>7.5 Redis</h3>
-      <table>
-        <thead><tr><th>Case</th><th>Behavior</th></tr></thead>
-        <tbody>
-          <tr><td>Down saat startup, <code>REDIS_REQUIRED=true</code></td><td>5x retry exp backoff → fail</td></tr>
-          <tr><td>Down, <code>REDIS_REQUIRED=false</code></td><td>Log warn, app continue dgn nil clients</td></tr>
-          <tr><td>Down saat runtime</td><td>Cache miss → fallback DB (jika handler pakai <code>helper.SafeRedisGet</code>)</td></tr>
-        </tbody>
-      </table>
+Worker reply pattern (RTD):
+<pre><code class="language-go">if strings.HasPrefix(d.CorrelationId, "RTD") {
+    replyBody := []byte("SHAVED") // atau "NOTSHAVED"
+    ch.PublishWithContext(ctx, "", d.ReplyTo, false, false, amqp.Publishing{
+        CorrelationId: d.CorrelationId,
+        Body:          replyBody,
+    })
+}</code></pre>
 
-      <h3>7.6 RabbitMQ</h3>
-      <table>
-        <thead><tr><th>Case</th><th>Behavior</th></tr></thead>
-        <tbody>
-          <tr><td>Initial connection gagal</td><td>5x retry → return error → <code>log.Fatalf</code></td></tr>
-          <tr><td>Channel setup gagal</td><td><code>log.Fatalf</code></td></tr>
-          <tr><td>Connection drop runtime</td><td>Goroutine watcher reconnect + re-setup channel</td></tr>
-          <tr><td>Publisher error queue full</td><td><span class="badge badge-warn">TODO</span> ignored saat ini</td></tr>
-        </tbody>
-      </table>
+<p>Lihat: <a href="./docs/UC-08-rabbitmq-messaging.md">UC-08-rabbitmq-messaging.md</a></p>
 
-      <h3>7.7 Concurrency</h3>
-      <table>
-        <thead><tr><th>Case</th><th>Behavior</th></tr></thead>
-        <tbody>
-          <tr><td>Concurrent edit campaign 2 AM</td><td>Last-write-wins <span class="badge badge-warn">TODO lock</span></td></tr>
-          <tr><td>Cron capping reset overlap</td><td>Single-fire (cron 1 instance)</td></tr>
-        </tbody>
-      </table>
-    </section>
+<hr>
 
-    <!-- 8. ACCEPTANCE CRITERIA -->
-    <section id="ac">
-      <h2>8. Acceptance Criteria</h2>
+<h2>7. Constraints</h2>
 
-      <h3>8.1 Per Use Case</h3>
+<h3>7.1 Functional Constraints</h3>
 
-      <div class="uc-card">
-        <h4>UC-01 (Postback)</h4>
-        <ul>
-          <li>Adnet GET <code>/v1/postback?campaign_id=X&amp;...</code> → response 200 dlm &lt; 500 ms</li>
-          <li>Record postback insert ke <code>postbacks</code> dgn semua param</li>
-          <li>Message ter-publish ke <code>E_PIXELSTORAGE</code></li>
-          <li>Duplicate postback dlm 600s tidak ter-record dua kali</li>
-          <li>Postback gagal validate → 400 + log warn dgn payload</li>
-        </ul>
-      </div>
+<table>
+<thead><tr><th>ID</th><th>Constraint</th><th>Rationale</th><th>Source</th></tr>
+</thead>
+<tbody>
+<tr><td>FC-01</td><td>JWT wajib HS256</td><td>Hindari algorithm confusion (CWE-327)</td><td><code>incoming_auth_handler.go</code></td></tr>
+<tr><td>FC-02</td><td>JWT <code>type</code> claim wajib <code>"access"</code> (refresh token reject)</td><td>Pisahkan access vs refresh</td><td><code>incoming_auth_handler.go</code></td></tr>
+<tr><td>FC-03</td><td><code>aud</code> & <code>iss</code> validation aktif kalau env diset</td><td>Multi-tenant token isolation</td><td><code>incoming_auth_handler.go</code></td></tr>
+<tr><td>FC-04</td><td>TLS verify aktif default, opt-in disable hanya non-prod</td><td>CWE-295 fix</td><td><code>infrastructure/external/http_client.go</code></td></tr>
+<tr><td>FC-05</td><td>AES key min 16/24/32 byte (AES-128/192/256)</td><td>Crypto correctness</td><td><code>infrastructure/external/utils.go</code></td></tr>
+<tr><td>FC-06</td><td>Postback endpoint public — auth via signed params/IP allowlist</td><td>Adnet callback gak bisa kirim Bearer</td><td><code>routes/postback.go</code></td></tr>
+<tr><td>FC-07</td><td>Body limit max 100 MB</td><td>Excel upload</td><td><code>url_mapping.go</code></td></tr>
+<tr><td>FC-08</td><td>Group-level <code>AuthMiddleware</code> di <code>/dashboard</code>, <code>/v1/{report,int,management}</code></td><td>Default-secure</td><td>gated <code>AUTH_ENFORCE_DEFAULT</code></td></tr>
+<tr><td>FC-09</td><td><strong>[NEW]</strong> Publisher <code>h.RM.PublishWithRetry</code> wajib digunakan — bukan <code>h.Rmqp.PublishMsg</code></td><td>Channel pool, auto-reconnect, 3x retry</td><td><code>src/infrastructure/messaging/rabbitmq.go</code></td></tr>
+<tr><td>FC-10</td><td><strong>[NEW]</strong> Context untuk publish harus request-scoped (<code>c.UserContext()</code>) — bukan global context</td><td>Hindari <code>context canceled</code> panic</td><td><code>incoming_*_handler.go</code></td></tr>
+</tbody></table>
+<h3>7.2 Non-Functional Constraints</h3>
 
-      <div class="uc-card">
-        <h4>UC-05 (Edit campaign)</h4>
-        <ul>
-          <li>AM scope agency X bisa edit campaign agency X</li>
-          <li>AM scope agency X <strong>tidak bisa</strong> edit campaign agency Y → 403</li>
-          <li>Update tersimpan ke <code>campaign_details</code> + audit log (kalau ada)</li>
-          <li>Message ter-publish ke <code>E_CAMPAIGNMANAGEMENT</code></li>
-          <li>Concurrent edit oleh 2 AM → last-write-wins (sementara, TODO lock)</li>
-        </ul>
-      </div>
+<table>
+<thead><tr><th>ID</th><th>Constraint</th><th>Target</th></tr>
+</thead>
+<tbody>
+<tr><td>NFC-01</td><td>DB pool max open conn</td><td><code>DB_MAX_OPEN_CONNS × replicas ≤ PG max_connections</code></td></tr>
+<tr><td>NFC-02</td><td>DB connection lifetime</td><td>30 min default (<code>DB_CONN_MAX_LIFETIME_MIN</code>)</td></tr>
+<tr><td>NFC-03</td><td>Redis fail-fast vs degraded</td><td><code>REDIS_REQUIRED=true</code> (default) → fail. <code>false</code> → continue tanpa cache</td></tr>
+<tr><td>NFC-04</td><td>RabbitMQ reconnect (legacy Rmqp)</td><td>Background goroutine watch <code>NotifyClose</code>, retry exp backoff</td></tr>
+<tr><td>NFC-05</td><td>HTTP outbound timeout</td><td>Per-call via <code>infrastructure/external/http_client.go</code></td></tr>
+<tr><td>NFC-06</td><td>Server should not run schema migration</td><td>Migration via dedicated <code>migrate</code> sub-cmd / init container</td></tr>
+<tr><td>NFC-07</td><td>Logs redact secrets</td><td><code>Cfg.Redacted()</code> mask password/private key</td></tr>
+<tr><td>NFC-08</td><td>Build verifiable di Go 1.24.1</td><td>Dockerfile pin</td></tr>
+<tr><td>NFC-09</td><td><strong>[NEW]</strong> RabbitManager pool size 5 channel, QoS 10</td><td>Throughput vs resource balance</td><td><code>server.go</code></td></tr>
+<tr><td>NFC-10</td><td><strong>[NEW]</strong> Publish retry max 3x, exponential backoff 500ms/1s/1.5s</td><td>Resilience tanpa overload</td><td><code>messaging/rabbitmq.go</code></td></tr>
+</tbody></table>
+<h3>7.3 Operational</h3>
 
-      <div class="uc-card">
-        <h4>UC-15 (Logout)</h4>
-        <ul>
-          <li>Logout endpoint call <code>h.RevokeJWT(jti, ttl)</code> dgn ttl = exp - now</li>
-          <li>Token sama dipakai → 401 <code>Token revoked</code></li>
-          <li>Setelah ttl expire, key blacklist auto-cleanup oleh Redis</li>
-        </ul>
-      </div>
+<table>
+<thead><tr><th>ID</th><th>Constraint</th></tr>
+</thead>
+<tbody>
+<tr><td>OC-01</td><td>Multi-replica deploy require: migrate run-once → server start</td></tr>
+<tr><td>OC-02</td><td>Tag release <code>v*.*.*</code> → CI auto-build 2 image (server + migrate)</td></tr>
+<tr><td>OC-03</td><td><code>.env</code> tidak boleh di-commit (sudah di <code>.gitignore</code>)</td></tr>
+<tr><td>OC-04</td><td><code>AES_SECRET_KEY</code> wajib via secret manager di prod</td></tr>
+<tr><td>OC-05</td><td>DB migration tool eksternal (<code>golang-migrate</code>) recommended jangka panjang vs AutoMigrate</td></tr>
+</tbody></table>
+<hr>
 
-      <h3>8.2 Cross-Cutting (Definition of Done)</h3>
-      <div class="callout">
-        Untuk setiap fitur baru, checklist berikut <strong>wajib</strong> sebelum merge:
-      </div>
-      <ul>
-        <li>Endpoint terdaftar di <code>src/app/routes/&lt;domain&gt;.go</code></li>
-        <li>Handler di <code>src/handler/incoming_&lt;domain&gt;_handler.go</code></li>
-        <li>Repository di <code>src/domain/repository/&lt;domain&gt;.go</code></li>
-        <li>Entity (kalau perlu) di <code>src/domain/entity/&lt;domain&gt;.go</code> + register di <code>migrateEntities</code></li>
-        <li>JWT auth applied (kalau bukan public)</li>
-        <li>Scope filter (company/agency/adnet) sesuai actor</li>
-        <li>Error response konsisten dgn envelope <code>{code, desc, error}</code></li>
-        <li>Response time &lt; 1s read, &lt; 3s export</li>
-        <li>Logs structured (logrus) — no <code>println</code></li>
-        <li>Secrets tidak di-log (<code>Cfg.Redacted()</code> pattern)</li>
-        <li><code>staticcheck ./...</code> zero new warning</li>
-        <li><code>go build ./...</code> exit 0</li>
-        <li>SPEC.md + SPEC.html updated (use case, API, entity, AC)</li>
-      </ul>
+<h2>8. Edge Cases</h2>
 
-      <h3>8.3 Non-Functional</h3>
-      <ul>
-        <li>DB query log enabled — no N+1 baru</li>
-        <li>Endpoint baru di-monitor di Grafana</li>
-        <li>Postback endpoint stress test ≥ 500 req/sec</li>
-        <li>Redis fail simulation: degraded mode tidak crash</li>
-        <li>DB pool sat test: tidak melebihi <code>DB_MAX_OPEN_CONNS</code></li>
-      </ul>
-    </section>
+<h3>8.1 Auth Edge Cases</h3>
 
-    <!-- 9. WORKFLOW -->
-    <section id="workflow">
-      <h2>9. Add Feature — Quick Workflow</h2>
-      <pre><code>1. Identify domain (campaign/budget/master-data/...)
+<table>
+<thead><tr><th>Case</th><th>Expected Behavior</th></tr>
+</thead>
+<tbody>
+<tr><td>Missing <code>Authorization</code> header</td><td>401 <code>{"error":"Missing or invalid token"}</code></td></tr>
+<tr><td>Header format selain <code>Bearer &lt;token&gt;</code></td><td>401</td></tr>
+<tr><td><code>JWT_SECRET</code> env not set</td><td>500 <code>{"error":"JWT secret not configured"}</code></td></tr>
+<tr><td>Token expired</td><td>401 <code>{"error":"Token expired"}</code></td></tr>
+<tr><td>Token <code>nbf</code> di future</td><td>401 <code>{"error":"Token not yet active"}</code> (30s leeway)</td></tr>
+<tr><td><code>aud</code> mismatch (kalau env diset)</td><td>401</td></tr>
+<tr><td><code>iss</code> mismatch (kalau env diset)</td><td>401</td></tr>
+<tr><td><code>type</code> ≠ "access"</td><td>401</td></tr>
+<tr><td><code>jti</code> di Redis blacklist</td><td>401 <code>{"error":"Token revoked"}</code></td></tr>
+<tr><td>Redis nil saat blacklist check</td><td>Skip check (degraded mode)</td></tr>
+<tr><td><code>sub</code> claim invalid format</td><td>401</td></tr>
+</tbody></table>
+<h3>8.2 Postback Edge Cases</h3>
 
-2. Update SPEC (md + html):
-   - Section 3: Use case
-   - Section 4.4: Endpoint
-   - Section 5: Entity (kalau perlu)
-   - Section 7: Edge case
-   - Section 8.1: Acceptance criteria
+<table>
+<thead><tr><th>Case</th><th>Expected Behavior</th></tr>
+</thead>
+<tbody>
+<tr><td>Adnet kirim duplicate postback</td><td>Dedup via cookie (3 detik window) → 403</td></tr>
+<tr><td>MSISDN format tidak valid</td><td>400 + log warn</td></tr>
+<tr><td>Campaign ID tidak ditemukan</td><td>404 (handler return explicitly)</td></tr>
+<tr><td>Postback masuk saat budget capping tercapai</td><td>Tetap record, mark capped</td></tr>
+<tr><td>Pixel sudah dipakai (<code>px.IsUsed = true</code>)</td><td>200/409 NOK — tidak diproses ulang</td></tr>
+<tr><td><code>h.RM</code> nil (RabbitManager tidak terinit)</td><td>Panic nil pointer — pastikan <code>server.go</code> selalu init RM</td></tr>
+</tbody></table>
+<h3>8.3 RabbitMQ / RabbitManager Edge Cases</h3>
 
-3. Implement:
-   - entity   → src/domain/entity/&lt;file&gt;.go (+ register migrateEntities)
-   - repo     → src/domain/repository/&lt;file&gt;.go
-   - handler  → src/handler/incoming_&lt;file&gt;_handler.go
-   - route    → src/app/routes/&lt;group&gt;.go
-   - DTO      → src/domain/entity/&lt;file&gt;.go (request/response struct)
+<table>
+<thead><tr><th>Case</th><th>Behavior</th></tr>
+</thead>
+<tbody>
+<tr><td>Initial connection gagal</td><td><code>NewRabbitManager</code> retry 5x (2s interval) → error → panic di <code>InitMessageBroker</code></td></tr>
+<tr><td>Channel pool habis (semua channel dipakai)</td><td><code>&lt;-rm.ChPool</code> block sampai ada yang kembali</td></tr>
+<tr><td>Publish gagal (broker nack)</td><td>Retry 3x exponential backoff → force close conn → <code>handleReconnect</code> wakes up</td></tr>
+<tr><td>DirectReplyTo timeout (RTD)</td><td><code>ctx.Done()</code> → return <code>ctx.Err()</code> → handler log error</td></tr>
+<tr><td>Worker tidak reply untuk RTD</td><td>Tunggu sampai context timeout</td></tr>
+<tr><td><code>corId</code> prefix <code>RTO</code> di handler sync</td><td>Bug — pastikan gunakan <code>RTD</code> prefix untuk <code>DirectReplyToWithRetry</code></td></tr>
+<tr><td>Legacy <code>h.Rmqp.PublishMsg</code> dipanggil</td><td>Masih functional (legacy path), tapi tidak ada retry/pool — avoid</td></tr>
+</tbody></table>
+<h3>8.4 HTTP Helper Edge Cases</h3>
 
-4. Test:
+<table>
+<thead><tr><th>Case</th><th>Behavior</th></tr>
+</thead>
+<tbody>
+<tr><td><code>httpClient.Do(req)</code> return error</td><td>Return wrapped error, <strong>tidak</strong> akses <code>response.Status</code></td></tr>
+<tr><td><code>response == nil</code> (lib quirk)</td><td>Explicit nil-check, return error</td></tr>
+<tr><td>Non-OK status (≠200)</td><td>Return real status code + error wrapped</td></tr>
+</tbody></table>
+<h3>8.5 DB / Pool Edge Cases</h3>
+
+<table>
+<thead><tr><th>Case</th><th>Behavior</th></tr>
+</thead>
+<tbody>
+<tr><td>PG <code>max_connections</code> saturated</td><td>Pool throttle (block sampai available)</td></tr>
+<tr><td>Connection lifetime exceeded</td><td>GORM auto-recreate connection</td></tr>
+<tr><td>AutoMigrate timeout</td><td><code>log.Fatalf</code> (exit 1) — operator harus investigate</td></tr>
+</tbody></table>
+<h3>8.6 Redis Edge Cases</h3>
+
+<table>
+<thead><tr><th>Case</th><th>Behavior</th></tr>
+</thead>
+<tbody>
+<tr><td>Redis down saat startup, <code>REDIS_REQUIRED=true</code></td><td>5x retry exp backoff → fail</td></tr>
+<tr><td>Redis down, <code>REDIS_REQUIRED=false</code></td><td>Log warn, app continue dgn <code>nil</code> clients, <code>Setup.RedisAvailable=false</code></td></tr>
+<tr><td>Redis down saat runtime</td><td>Cache miss → fallback DB (jika handler pakai <code>helper.SafeRedisGet</code>)</td></tr>
+</tbody></table>
+<h3>8.7 Concurrency</h3>
+
+<table>
+<thead><tr><th>Case</th><th>Behavior</th></tr>
+</thead>
+<tbody>
+<tr><td>Concurrent edit campaign by 2 AM</td><td>Last-write-wins (no optimistic lock) — TODO future</td></tr>
+<tr><td>Cron capping reset overlap</td><td>Single-fire (cron runs in single instance)</td></tr>
+<tr><td>Multiple goroutine publish via RabbitManager</td><td>Thread-safe via channel pool (<code>sync.RWMutex</code> + <code>chan *amqp.Channel</code>)</td></tr>
+</tbody></table>
+<hr>
+
+<h2>9. Acceptance Criteria</h2>
+
+<h3>9.1 Per Use Case</h3>
+
+<h4>UC-01.1 (Postback async — RTO)</h4>
+<ul><li>Adnet GET <code>/v1/postback?...</code> → response 200 dalam < 500ms</li>
+<li>Cookie dedup aktif 3 detik — duplicate request dalam window → 403</li>
+<li>Pixel lookup dari Redis — 404 jika tidak ada</li>
+<li><code>corId</code> berprefix <code>RTO</code> — worker tidak reply</li>
+<li>Message ter-publish ke Ratio queue via <code>h.RM.PublishWithRetry</code></li>
+<li>Postback gagal validate → 400 + log warn dgn request payload</li></ul>
+
+<h4>UC-01.2 (Postback sync — RTD)</h4>
+<ul><li>Adnet GET <code>/v1/postback_sync?...</code> → sistem menunggu reply worker</li>
+<li><code>corId</code> berprefix <code>RTD</code> — worker WAJIB reply</li>
+<li>Reply <code>"SHAVED"</code> atau <code>"NOTSHAVED"</code> diterima dalam batas timeout</li>
+<li>Timeout → log error, return appropriate error response</li></ul>
+
+<h4>UC-02.2 (Edit campaign)</h4>
+<ul><li>AM dgn scope agency <code>X</code> bisa edit campaign agency <code>X</code></li>
+<li>AM dgn scope agency <code>X</code> <strong>tidak bisa</strong> edit campaign agency <code>Y</code> → 403</li>
+<li>Update tersimpan ke <code>campaign_details</code> DB + Redis config</li>
+<li>Concurrent edit oleh 2 AM → last-write-wins (sementara, TODO lock)</li></ul>
+
+<h4>UC-02.5 (Send campaign via RabbitMQ)</h4>
+<ul><li><code>POST /v1/management/campaign/send</code> → publish ke <code>E_CAMPAIGNMANAGEMENT</code></li>
+<li>Menggunakan <code>h.RM.PublishWithRetry</code> (bukan Rmqp legacy)</li>
+<li>Context timeout dari <code>RABBITMQCONTEXTTIMEOUT</code> env (default 30s)</li>
+<li>Publish gagal → log debug, return 200 tetap (fire-and-forget)</li></ul>
+
+<h4>UC-04.7 / UC-09.3 (Logout)</h4>
+<ul><li>Logout endpoint call <code>h.RevokeJWT(jti, ttl)</code> dgn ttl = exp - now</li>
+<li>Token yg sama di-pakai → 401 <code>Token revoked</code></li>
+<li>Setelah ttl expire, key blacklist auto-cleanup oleh Redis</li></ul>
+
+<h3>9.2 Cross-Cutting (Definition of Done)</h3>
+
+<p>Untuk setiap fitur baru:</p>
+
+<ul><li>Endpoint terdaftar di <code>src/interfaces/http/routes/&lt;group&gt;.go</code></li>
+<li>Handler di <code>src/interfaces/http/handler/incoming_&lt;domain&gt;_handler.go</code></li>
+<li>Repository (kalau ada DB access) di <code>src/infrastructure/persistence/&lt;domain&gt;.go</code></li>
+<li>Entity (kalau ada DB schema baru) di <code>src/domain/entity/&lt;domain&gt;.go</code> + register di <code>migrateEntities</code></li>
+<li>JWT auth applied (kalau bukan public)</li>
+<li>Scope filter (company/agency/adnet) sesuai actor</li>
+<li>Error response konsisten dgn envelope <code>{code, desc, error}</code></li>
+<li>Response time < 1 detik untuk read endpoint, < 3 detik untuk export</li>
+<li>Logs structured (logrus) — no println bocor</li>
+<li>Secrets tidak di-log (gunakan <code>Cfg.Redacted()</code> pattern)</li>
+<li><code>staticcheck ./...</code> zero new warning</li>
+<li><code>go build ./...</code> exit 0</li>
+<li><strong>UC doc di <code>docs/UC-NN-*.md</code> updated</strong></li>
+<li><strong>SPEC.md updated</strong>: section 3 (use case), 4 (API contract), 5 (entity jika ada), 8 (edge case), 9 (AC)</li>
+<li>Publisher menggunakan <code>h.RM.PublishWithRetry</code> / <code>h.RM.DirectReplyToWithRetry</code> — <strong>bukan</strong> <code>h.Rmqp.PublishMsg</code></li></ul>
+
+<h3>9.3 Non-Functional</h3>
+
+<ul><li>DB query log enabled (GORM logger Info mode) — no N+1 baru</li>
+<li>Endpoint baru di-monitor di Grafana (HTTP latency, error rate)</li>
+<li>Postback endpoint stress test ≥ 500 req/sec sustained</li>
+<li>Redis fail simulation: degraded mode tidak crash (kalau <code>REDIS_REQUIRED=false</code>)</li>
+<li>DB pool sat test: tidak melebihi <code>DB_MAX_OPEN_CONNS</code></li>
+<li>RabbitMQ disconnect simulation: <code>RabbitManager.handleReconnect</code> auto-recovery dalam < 10s</li></ul>
+
+<hr>
+
+<h2>10. Adding New Feature — Quick Workflow</h2>
+
+<pre><code class="language-">1. Identify domain (campaign / budget / master-data / messaging / ...)
+
+2. Update docs (SEBELUM kode):
+   a. Buat/update docs/UC-NN-nama.md
+   b. Update docs/README.md tabel index
+   c. Update SPEC.md:
+      - Section 3: Use case baru
+      - Section 4.4: Endpoint definition
+      - Section 5: Entity baru (jika ada)
+      - Section 8: Edge cases
+      - Section 9.1: Acceptance criteria
+
+3. Implement (urutan: entity → repo → handler → route):
+   - entity  → src/domain/entity/&lt;file&gt;.go  (+ register migrateEntities)
+   - repo    → src/infrastructure/persistence/&lt;file&gt;.go
+   - handler → src/interfaces/http/handler/incoming_&lt;file&gt;_handler.go
+   - route   → src/interfaces/http/routes/&lt;group&gt;.go
+
+4. RabbitMQ publish:
+   - Gunakan h.RM.PublishWithRetry (async/RTO) atau h.RM.DirectReplyToWithRetry (sync/RTD)
+   - Context: context.WithTimeout(c.UserContext(), timeout)
+   - Jika queue baru: tambah ke rmDeclares + channels di server.go
+
+5. Test:
    - go build ./...
    - staticcheck ./...
    - manual hit endpoint
    - cek log untuk leak secret
 
-5. Run migration:
+6. Run migration (jika ada entity baru):
    ./datasource migrate
 
-6. Deploy:
+7. Deploy:
    - tag git v1.x.y
    - CI auto build
    - update compose version
    - run migrate compose first
    - deploy server</code></pre>
 
-      <div class="callout warn">
-        <strong>Pre-prod reminder</strong>: <code>AES_SECRET_KEY</code> rotate &amp; pindah ke secret manager.
-        <code>AUTH_ENFORCE_DEFAULT=true</code> setelah FE migrate. Multi-replica deploy: pastikan
-        <code>DB_MAX_OPEN_CONNS × replicas ≤ PG max_connections</code>.
-      </div>
-    </section>
+<hr>
 
-    <div class="footer">
-      <p>SDD report — auto-generated dari source. Companion files:
-        <a href="./SPEC.md" style="color:var(--accent);">SPEC.md</a> ·
-        <a href="./AUDIT_FIX.md" style="color:var(--accent);">AUDIT_FIX.md</a> ·
-        <a href="./UNUSED_FUNCTIONS.md" style="color:var(--accent);">UNUSED_FUNCTIONS.md</a>
-      </p>
-      <p>Last updated: 2026-05-08</p>
-    </div>
+<h2>Appendix A — Env Vars Reference</h2>
 
-  </main>
-</div>
+<p>Lihat <code>AUDIT_FIX.md</code> section "Env Vars Summary". Env vars terkait RabbitMQ:</p>
+
+<table>
+<thead><tr><th>Env Var</th><th>Default</th><th>Digunakan Oleh</th></tr>
+</thead>
+<tbody>
+<tr><td><code>RABBITMQHOST</code></td><td>—</td><td><code>Cfg.RabbitMQHost</code></td></tr>
+<tr><td><code>RABBITMQPORT</code></td><td>—</td><td><code>Cfg.RabbitMQPort</code></td></tr>
+<tr><td><code>RABBITMQUSERNAME</code></td><td>—</td><td><code>Cfg.RabbitMQUsername</code></td></tr>
+<tr><td><code>RABBITMQPASSWORD</code></td><td>—</td><td><code>Cfg.RabbitMQPassword</code></td></tr>
+<tr><td><code>RABBITMQVHOST</code></td><td>—</td><td><code>Cfg.RabbitMQVHost</code></td></tr>
+<tr><td><code>RABBITMQCONTEXTTIMEOUT</code></td><td><code>30</code></td><td>Context timeout publish (detik)</td></tr>
+<tr><td><code>RABBITMQRATIOEXCHANGENAME</code></td><td>—</td><td>Ratio exchange</td></tr>
+<tr><td><code>RABBITMQRATIOQUEUENAME</code></td><td>—</td><td>Ratio queue</td></tr>
+<tr><td><code>RABBITMQCAMPAIGNMANAGEMENTEXCHANGENAME</code></td><td>—</td><td>CampaignManagement exchange</td></tr>
+<tr><td><code>RABBITMQCAMPAIGNMANAGEMENTQUEUENAME</code></td><td>—</td><td>CampaignManagement queue</td></tr>
+</tbody></table>
+<h2>Appendix B — Related Docs</h2>
+
+<ul><li><a href="./docs/README.md"><code>docs/README.md</code></a> — <strong>Per-UC documentation index</strong> (UC-01 s/d UC-09+)</li>
+<li><a href="./CLAUDE.md"><code>CLAUDE.md</code></a> — Architecture guide, conventions, how-to-change</li>
+<li><a href="./AUDIT_FIX.md"><code>AUDIT_FIX.md</code></a> — Audit fix implementation log (8 priority items)</li>
+<li><a href="./UNUSED_FUNCTIONS.md"><code>UNUSED_FUNCTIONS.md</code></a> — Dead code report</li>
+<li><a href="./NOTES.md"><code>NOTES.md</code></a> — Changelog per release</li>
+<li><code>Data Source.pdf</code> — Original audit report (2026-02-11)</li></ul>
+
+<h2>Appendix C — Changelog SPEC</h2>
+
+<table>
+<thead><tr><th>Tanggal</th><th>Perubahan</th></tr>
+</thead>
+<tbody>
+<tr><td>2026-06-05</td><td>Tambah Section 6 (RabbitMQ/RabbitManager), UC-01b (RTD sync), UC-30, UC-31; update FC/NFC constraints; update edge cases section 8.3, 8.7; update DoD section 9.2; tambah Appendix C</td></tr>
+<tr><td>2026-05-13</td><td>Initial spec creation</td></tr>
+</tbody></table>
+</main>
+<script>
+const toc = document.getElementById('toc');
+const headings = document.querySelectorAll('h1,h2,h3,h4,h5');
+headings.forEach((h, i) => {
+  if (!h.id) h.id = 'h' + i + '_' + h.textContent.replace(/[^a-z0-9]+/gi,'_').toLowerCase().slice(0,35);
+  const a = document.createElement('a');
+  a.href = '#' + h.id;
+  a.textContent = h.textContent;
+  a.className = 'toc-' + h.tagName.toLowerCase();
+  toc.appendChild(a);
+});
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    const link = toc.querySelector('[href="#' + e.target.id + '"]');
+    if (link) link.classList.toggle('active', e.isIntersecting);
+  });
+}, {rootMargin:'-10px 0px -75% 0px'});
+headings.forEach(h => obs.observe(h));
+</script>
 </body>
 </html>

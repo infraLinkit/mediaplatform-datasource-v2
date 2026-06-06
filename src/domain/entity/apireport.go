@@ -42,7 +42,7 @@ type (
 		Adnet      string   `form:"adnet" json:"adnet"`
 		Operator   string   `form:"operator" json:"operator"`
 		Service    string   `form:"service" json:"service"`
-		Adnets     []string `form:"adnet" json:"adnet"`
+		Adnets     []string `form:"adnet" json:"adnets"`
 		Page       int      `form:"page" json:"page"`
 		DateRange  string   `form:"date_range" json:"date_range"`
 		DateBefore string   `form:"date_before" json:"date_before"`
@@ -154,8 +154,8 @@ type (
 		Country       string    `json:"country"`
 		Operator      string    `json:"operator"`
 		ChannelType   string    `json:"channel_type"`   // NEW: filter by channel type
-		GroupBy       string    `json:"group_by"`        // NEW: "adnet" | "country"
-		DataIndicator string    `json:"data_indicator"`  // NEW: "s2s" | "api" | ""
+		GroupBy       string    `json:"group_by"`       // NEW: "adnet" | "country"
+		DataIndicator string    `json:"data_indicator"` // NEW: "s2s" | "api" | ""
 		Landing       float64   `json:"landing"`
 		CrPostback    float64   `json:"cr_postback"`
 		ShortCode     string    `json:"short_code"`
@@ -173,7 +173,7 @@ type (
 		Page          int       `json:"page"`
 		Draw          int       `json:"draw"`
 		DataBasedOn   string    `json:"data_based_on"`
-		FromChannel   bool 
+		FromChannel   bool
 	}
 
 	DisplayAlertReport struct {
@@ -440,16 +440,16 @@ func NewInstanceTrxPinPerfonrmanceReport(c *fiber.Ctx, cfg *config.Cfg) *ApiPinP
 	}
 
 	pin := ApiPinPerformance{
-		Adnet:               strings.ToUpper(m["adnet"]),
-		Country:             country,
-		Company:             strings.ToUpper(m["company"]),
-		Service:             strings.ToUpper(m["service"]),
-		Operator:            operator,
-		DateSend:            dateSend,
-		PinRequest:          pinRequest,
-		UniquePinRequest:    uniquePinRequest,
-		PinSuccess:          pinSent,
-		PinFailed:           pinFailed,
+		Adnet:                  strings.ToUpper(m["adnet"]),
+		Country:                country,
+		Company:                strings.ToUpper(m["company"]),
+		Service:                strings.ToUpper(m["service"]),
+		Operator:               operator,
+		DateSend:               dateSend,
+		PinRequest:             pinRequest,
+		UniquePinRequest:       uniquePinRequest,
+		PinSuccess:             pinSent,
+		PinFailed:              pinFailed,
 		PinVerifyRequest:       verifyRequest,
 		PinVerifyRequestUnique: verifyRequestUnique,
 		PinOK:                  pinOK,
