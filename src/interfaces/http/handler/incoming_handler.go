@@ -7,7 +7,6 @@ import (
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/messaging"
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/persistence"
 	"github.com/sirupsen/logrus"
-	"github.com/wiliehidayat87/rmqp"
 	"google.golang.org/api/sheets/v4"
 	"gorm.io/gorm"
 )
@@ -17,7 +16,6 @@ type (
 		Config *config.Cfg
 		Logs   *logrus.Logger
 		DB     *gorm.DB
-		Rmqp   rmqp.AMQP
 		RM     *messaging.RabbitManager
 		R      *rueidis.Storage
 		RCP    *redis.Client
@@ -42,7 +40,6 @@ func NewIncomingHandler(obj IncomingHandler) *IncomingHandler {
 		DB:     obj.DB,
 		R:      obj.R,
 		RCP:    obj.RCP,
-		Rmqp:   obj.Rmqp,
 		RM:     obj.RM,
 		DS:     b,
 		GS:     obj.GS,

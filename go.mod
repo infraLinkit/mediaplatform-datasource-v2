@@ -8,6 +8,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/gofiber/storage/rueidis v1.2.3
 	github.com/golang-jwt/jwt/v4 v4.5.2
+	github.com/google/uuid v1.6.0
 	github.com/ledongthuc/goterators v1.0.2
 	github.com/lib/pq v1.10.9
 	github.com/mikhail-bigun/fiberlogrus v0.2.1
@@ -16,7 +17,6 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.11.1
-	github.com/wiliehidayat87/rmqp v1.1.2
 	golang.org/x/crypto v0.37.0
 	google.golang.org/api v0.229.0
 	gorm.io/driver/postgres v1.5.11
@@ -37,7 +37,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gofiber/utils/v2 v2.0.0-beta.4 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

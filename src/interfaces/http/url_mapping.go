@@ -16,7 +16,6 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/mikhail-bigun/fiberlogrus"
 	"github.com/sirupsen/logrus"
-	"github.com/wiliehidayat87/rmqp"
 	"google.golang.org/api/sheets/v4"
 	"gorm.io/gorm"
 )
@@ -41,7 +40,6 @@ type App3rdParty struct {
 	DB     *gorm.DB
 	R      *rueidis.Storage
 	RCP    *redis.Client
-	Rmqp   rmqp.AMQP
 	RM     *messaging.RabbitManager
 	GS     *sheets.Service
 }
@@ -90,7 +88,6 @@ func MapUrls(obj App3rdParty) *fiber.App {
 		R:      obj.R,
 		RCP:    obj.RCP,
 		DB:     obj.DB,
-		Rmqp:   obj.Rmqp,
 		RM:     obj.RM,
 		GS:     obj.GS,
 	})

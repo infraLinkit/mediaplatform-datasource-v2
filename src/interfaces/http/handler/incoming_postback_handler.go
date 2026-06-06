@@ -8,10 +8,8 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/domain/entity"
 	"github.com/infraLinkit/mediaplatform-datasource-v2/src/infrastructure/external"
-	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 func (h *IncomingHandler) Postback(c *fiber.Ctx) error {
@@ -986,84 +984,10 @@ func (h *IncomingHandler) PostbackDirectReply(c *fiber.Ctx) error {
 								corId := "RTD" + external.GetUniqId(h.Config.TZ)
 
 								reply := "NOTSHAVED"
-								
-								var (
-									respBody []byte
-									pubErr   error
-								)
-								
-								if h.Rmqp.Connection == nil {
-									pubErr = fmt.Errorf("rabbitmq connection is nil")
-								} else {
-									ctx, cancel := context.WithTimeout(c.UserContext(), time.Duration(h.Config.RabbitMQCtxTimeout)*time.Second)
-									defer cancel()
-									
-									for attempt := 0; attempt < 3; attempt++ {
-										respBody, pubErr = func() ([]byte, error) {
-											ch, err := h.Rmqp.Connection.Channel()
-											if err != nil {
-												return nil, fmt.Errorf("failed to open channel: %w", err)
-											}
-											defer ch.Close()
+								ctx, cancel := context.WithTimeout(c.UserContext(), time.Duration(h.Config.RabbitMQCtxTimeout)*time.Second)
+								defer cancel()
 
-											consumerTag := uuid.New().String()
-											deliveries, err := ch.Consume(
-												"amq.rabbitmq.reply-to", // queue
-												consumerTag,             // consumer
-												true,                    // auto-ack
-												false,                   // exclusive
-												false,                   // no-local
-												false,                   // no-wait
-												nil,                     // args
-											)
-											if err != nil {
-												return nil, fmt.Errorf("failed to consume from reply-to: %w", err)
-											}
-											defer ch.Cancel(consumerTag, false)
-
-											msg := amqp.Publishing{
-												ContentType:   "application/json",
-												ReplyTo:       "amq.rabbitmq.reply-to",
-												CorrelationId: corId,
-												Body:          bodyReq,
-											}
-
-											err = ch.PublishWithContext(ctx, h.Config.RabbitMQRatioExchangeName, h.Config.RabbitMQRatioQueueName, false, false, msg)
-											if err != nil {
-												return nil, fmt.Errorf("failed to publish: %w", err)
-											}
-
-											for {
-												select {
-												case d, ok := <-deliveries:
-													if !ok {
-														return nil, fmt.Errorf("deliveries channel closed")
-													}
-													if d.CorrelationId == corId {
-														return d.Body, nil
-													}
-												case <-ctx.Done():
-													return nil, ctx.Err()
-												}
-											}
-										}()
-										
-										if pubErr == nil {
-											break
-										}
-										
-										h.Logs.Warnf("DirectReplyTo failed: %v. Retrying in %d ms... (Attempt %d/3)", pubErr, (attempt+1)*500, attempt+1)
-										select {
-										case <-time.After(time.Duration(attempt+1) * 500 * time.Millisecond):
-											continue
-										case <-ctx.Done():
-											pubErr = ctx.Err()
-											break
-										}
-									}
-								}
-
-								if pubErr != nil {
+								if respBody, pubErr := h.RM.DirectReplyToWithRetry(ctx, h.Config.RabbitMQRatioExchangeName, h.Config.RabbitMQRatioQueueName, bodyReq, corId); pubErr != nil {
 									h.Logs.Debug(fmt.Sprintf("[x] Failed published, Error: %v, Data: %s ...", pubErr, string(bodyReq)))
 								} else {
 									h.Logs.Debug(fmt.Sprintf("[v] Published, Data: %s, Response: %s ...", string(bodyReq), string(respBody)))
