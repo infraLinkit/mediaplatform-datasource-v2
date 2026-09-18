@@ -239,6 +239,72 @@ func (r *BaseModel) GetReport(country string, operator string, client_type strin
 			date_list = append(date_list, s.Date)
 		}
 
+		// When querying all objectives, also merge api_pin_reports data (API = external only)
+		if campaign_objective == "" && client_type != "internal" {
+			apiQ2 := r.DB.Model(&entity.ApiPinReport{})
+			selectDateAPI2 := "DATE(date_send) as date, "
+			switch date_range {
+			case "TODAY":
+				apiQ2 = apiQ2.Where("date_send = CURRENT_DATE")
+			case "YESTERDAY":
+				apiQ2 = apiQ2.Where("date_send = CURRENT_DATE - INTERVAL '1 DAY'")
+			case "LAST7DAY":
+				apiQ2 = apiQ2.Where("date_send BETWEEN CURRENT_DATE - INTERVAL '7 DAY' AND CURRENT_DATE")
+			case "LAST30DAY":
+				apiQ2 = apiQ2.Where("date_send BETWEEN CURRENT_DATE - INTERVAL '30 DAY' AND CURRENT_DATE")
+			case "THISMONTH":
+				apiQ2 = apiQ2.Where("date_send >= DATE_TRUNC('month', CURRENT_DATE)")
+			case "LASTMONTH":
+				apiQ2 = apiQ2.Where("date_send BETWEEN DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 MONTH') AND DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 DAY'")
+			case "CUSTOMRANGE":
+				apiQ2 = apiQ2.Where("date_send BETWEEN ? AND ?", date_before, date_after)
+			case "MONTHLY":
+				apiQ2 = apiQ2.Where("date_send BETWEEN TO_DATE(?, 'YYYY-MM') AND TO_DATE(?, 'YYYY-MM') + INTERVAL '1 month' - INTERVAL '1 day'", date_before, date_after)
+				selectDateAPI2 = "TO_CHAR(date_send,'YYYY-MM') as date, "
+			}
+			if country != "" {
+				apiQ2 = apiQ2.Where("country = ?", country)
+			}
+			if operator != "" {
+				apiQ2 = apiQ2.Where("operator = ?", operator)
+			}
+			if service != "" {
+				apiQ2 = apiQ2.Where("service = ?", service)
+			}
+			apiRows2, apiErr2 := apiQ2.Select(selectDateAPI2 +
+				"SUM(total_mo) as mo_received, " +
+				"SUM(total_postback) as mo_sent, " +
+				"SUM(sbaf) as spending_to_adnets, " +
+				"SUM(saaf) as spending, " +
+				"SUM(waki_revenue) as waki_revenue").Group("date").Order("date ASC").Rows()
+			if apiErr2 == nil {
+				defer apiRows2.Close()
+				dateIdx := make(map[string]int)
+				for i, s := range ss {
+					dateIdx[s.Date] = i
+				}
+				for apiRows2.Next() {
+					var a entity.SummaryDashboardReportDetail
+					r.DB.ScanRows(apiRows2, &a)
+					a.Date = strings.TrimSuffix(a.Date, "T00:00:00Z")
+					if idx, ok := dateIdx[a.Date]; ok {
+						ss[idx].MOReceived += a.MOReceived
+						ss[idx].MOSent += a.MOSent
+						ss[idx].SpendingToAdnets += a.SpendingToAdnets
+						ss[idx].Spending += a.Spending
+						ss[idx].WAKIRevenue += a.WAKIRevenue
+					} else {
+						ss = append(ss, a)
+					}
+				}
+				sort.Slice(ss, func(i, j int) bool { return ss[i].Date < ss[j].Date })
+				date_list = nil
+				for _, s := range ss {
+					date_list = append(date_list, s.Date)
+				}
+			}
+		}
+
 		var SummaryDashboardReport entity.SummaryDashboardReport
 		SummaryDashboardReport.DateRange = date_range
 		SummaryDashboardReport.Detail = ss
@@ -389,6 +455,7 @@ func (r *BaseModel) GetCampaign(order_type string, order_by string, offset strin
 				roiMonths, hasROI := cohortROI[s.URLServiceKey]
 				if hasROI {
 					s.ROIMonths = roiMonths
+					s.HasROI = true
 				}
 			}
 

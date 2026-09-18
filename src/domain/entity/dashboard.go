@@ -142,6 +142,7 @@ type (
 		ROAS          float64 `json:"roas"`
 		EstROAS       float64 `json:"est_roas"`
 		ROIMonths     float64 `json:"roi_months"`
+		HasROI        bool    `json:"has_roi"`
 	}
 
 	SummaryTopBestCampaign struct {
@@ -254,11 +255,15 @@ type (
 	}
 
 	CampaignDailyStat struct {
-		Date    string  `json:"date"`
-		MO      int     `json:"mo"`
-		Spend   float64 `json:"spend"`
-		Revenue float64 `json:"revenue"`
-		ROAS    float64 `json:"roas"`
+		Date       string  `json:"date"`
+		MO         int     `json:"mo"`
+		Spend      float64 `json:"spend"`
+		Revenue    float64 `json:"revenue"`
+		ROAS       float64 `json:"roas"`
+		EstROAS    float64 `json:"est_roas"`
+		HasEstROAS bool    `json:"has_est_roas"`
+		ROIMonths  float64 `json:"roi_months"`
+		HasROI     bool    `json:"has_roi"`
 	}
 
 	FilterOptions struct {

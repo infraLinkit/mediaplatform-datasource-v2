@@ -865,6 +865,42 @@ func (r *BaseModel) GetCampaignDaily(campaign_id, date_range, date_before, date_
 		row.Date = strings.TrimSuffix(row.Date, "T00:00:00Z")
 		results = append(results, row)
 	}
+
+	// Per-date Est ROAS: same est_ltv/cac formula as the aggregate cohort
+	// helpers, but grouped by day instead of summed over the whole range —
+	// gross revenue for this exact campaign on this exact date, divided by
+	// that day's own MO, over that day's own CAC.
+	type cohortDayRow struct {
+		Date            string  `gorm:"column:date"`
+		SumGrossRevenue float64 `gorm:"column:sum_gross_revenue"`
+		AvgROIMonths    float64 `gorm:"column:avg_roi_months"`
+	}
+	var cohortDays []cohortDayRow
+	cohortErr := r.DB.Model(&entity.CampaignROASCohort{}).
+		Where("url_service_key = ?", campaign_id).
+		Select("DATE(summary_date) as date, SUM(estimated_gross_revenue_full) as sum_gross_revenue, AVG(roi_months_payback) as avg_roi_months").
+		Group("DATE(summary_date)").Scan(&cohortDays).Error
+	if cohortErr == nil && len(cohortDays) > 0 {
+		cohortByDate := make(map[string]cohortDayRow, len(cohortDays))
+		for _, cd := range cohortDays {
+			cohortByDate[strings.TrimSuffix(cd.Date, "T00:00:00Z")] = cd
+		}
+		for i := range results {
+			cd, hasCohort := cohortByDate[results[i].Date]
+			if !hasCohort {
+				continue
+			}
+			results[i].ROIMonths = cd.AvgROIMonths
+			results[i].HasROI = true
+			if results[i].MO <= 0 || results[i].Spend <= 0 {
+				continue
+			}
+			cac := results[i].Spend / float64(results[i].MO)
+			results[i].EstROAS = (cd.SumGrossRevenue / float64(results[i].MO)) / cac * 100
+			results[i].HasEstROAS = true
+		}
+	}
+
 	return results, nil
 }
 
