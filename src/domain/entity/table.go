@@ -1091,27 +1091,22 @@ type (
 
 	SummaryBudgetIO struct {
 		gorm.Model
-		ID                      int     `gorm:"primaryKey;autoIncrement" json:"id"`
-		CampaignType            string  `gorm:"size:100;default:NA" json:"campaign_type"`
-		Month                   string  `gorm:"size:20;default:NA" json:"month"` // format YYYY-MM
-		Country                 string  `gorm:"size:50;default:NA" json:"country"`
-		Continent               string  `gorm:"size:50;default:NA" json:"continent"`
-		Company                 string  `gorm:"size:50;default:NA" json:"company"`
-		Partner                 string  `gorm:"size:50;default:NA" json:"partner"`
-		Service                 string  `gorm:"size:50;default:NA" json:"service"`
-		TotalMonthlySpendTarget float64 `gorm:"type:double precision;default:0" json:"total_monthly_spend_target"`
-		ActualWeek1             float64 `gorm:"type:double precision;default:0" json:"actual_week_1"`
-		ActualWeek2             float64 `gorm:"type:double precision;default:0" json:"actual_week_2"`
-		ActualWeek3             float64 `gorm:"type:double precision;default:0" json:"actual_week_3"`
-		ActualWeek4             float64 `gorm:"type:double precision;default:0" json:"actual_week_4"`
-
-		GMV  float64 `gorm:"type:double precision;default:0" json:"gmv"`
-		LTV  float64 `gorm:"type:double precision;default:0" json:"ltv"`
-		ROAS float64 `gorm:"type:double precision;default:0" json:"roas"`
-		ROI  float64 `gorm:"type:double precision;default:0" json:"roi"`
-
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
+		ID           int       `gorm:"primaryKey;autoIncrement" json:"id"`
+		SummaryDate  time.Time `gorm:"type:date;uniqueIndex:idx_sumbio_unique" json:"summary_date"`
+		CampaignType string    `gorm:"size:100;default:NA;uniqueIndex:idx_sumbio_unique" json:"campaign_type"`
+		ClientType   string    `gorm:"size:50;default:NA;uniqueIndex:idx_sumbio_unique" json:"client_type"`
+		Month        string    `gorm:"size:20;default:NA" json:"month"`
+		Country      string    `gorm:"size:50;default:NA;uniqueIndex:idx_sumbio_unique" json:"country"`
+		Continent    string    `gorm:"size:50;default:NA" json:"continent"`
+		Company      string    `gorm:"size:50;default:NA;uniqueIndex:idx_sumbio_unique" json:"company"`
+		Partner      string    `gorm:"size:50;default:NA;uniqueIndex:idx_sumbio_unique" json:"partner"`
+		Operator     string    `gorm:"size:100;default:NA;uniqueIndex:idx_sumbio_unique" json:"operator"`
+		Channel      string    `gorm:"size:100;default:NA;uniqueIndex:idx_sumbio_unique" json:"channel"`
+		Service      string    `gorm:"size:100;default:NA;uniqueIndex:idx_sumbio_unique" json:"service"`
+		ActualCost   float64   `gorm:"type:double precision;default:0" json:"actual_cost"`
+		MOCount      float64   `gorm:"type:double precision;default:0" json:"mo_count"`
+		CreatedAt    time.Time `json:"created_at"`
+		UpdatedAt    time.Time `json:"updated_at"`
 	}
 
 	UserCompany struct {

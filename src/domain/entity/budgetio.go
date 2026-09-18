@@ -129,19 +129,17 @@ type (
 	}
 
 	DisplaySummaryBudgetIO struct {
-		ID        int    `json:"id"`
-		Month     string `json:"month"`
-		Continent string `json:"continent"`
-		Country   string `json:"country"`
-		Company   string `json:"company"`
-		Partner   string `json:"partner"`
-		Service   string `json:"service"`
-
-		TotalMonthlySpendTarget float64 `json:"total_monthly_spend_target"`
-		ActualWeek1             float64 `json:"actual_week_1"`
-		ActualWeek2             float64 `json:"actual_week_2"`
-		ActualWeek3             float64 `json:"actual_week_3"`
-		ActualWeek4             float64 `json:"actual_week_4"`
+		ID           int    `json:"id"`
+		Month        string `json:"month"`
+		Continent    string `json:"continent"`
+		Country      string `json:"country"`
+		Company      string `json:"company"`
+		Partner      string `json:"partner"`
+		Operator     string `json:"operator"`
+		Channel      string `json:"channel"`
+		CampaignType string `json:"campaign_type"`
+		Service      string `json:"service"`
+		ClientType   string `json:"client_type"`
 
 		CreatedAt time.Time `json:"created_at"`
 		UpdatedAt time.Time `json:"updated_at"`
@@ -176,10 +174,12 @@ type (
 		ActualWeek2 float64 `gorm:"column:actual_week_2"`
 		ActualWeek3 float64 `gorm:"column:actual_week_3"`
 		ActualWeek4 float64 `gorm:"column:actual_week_4"`
+		ActualWeek5 float64 `gorm:"column:actual_week_5"`
 		MOWeek1     float64 `gorm:"column:mo_week1"`
 		MOWeek2     float64 `gorm:"column:mo_week2"`
 		MOWeek3     float64 `gorm:"column:mo_week3"`
 		MOWeek4     float64 `gorm:"column:mo_week4"`
+		MOWeek5     float64 `gorm:"column:mo_week5"`
 
 		BudgetIOID int     `gorm:"column:budget_io_id"`
 		IOTarget   float64 `gorm:"column:io_target"`
@@ -206,11 +206,13 @@ type (
 		MOWeek2 float64 `json:"mo_week2"`
 		MOWeek3 float64 `json:"mo_week3"`
 		MOWeek4 float64 `json:"mo_week4"`
+		MOWeek5 float64 `json:"mo_week5"`
 
 		CostWeek1 float64 `json:"cost_week1"`
 		CostWeek2 float64 `json:"cost_week2"`
 		CostWeek3 float64 `json:"cost_week3"`
 		CostWeek4 float64 `json:"cost_week4"`
+		CostWeek5 float64 `json:"cost_week5"`
 
 		IOTarget    float64 `json:"io_target"`
 		MOTarget    float64 `json:"mo_target"`
