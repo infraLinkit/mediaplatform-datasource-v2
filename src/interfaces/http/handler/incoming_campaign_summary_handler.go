@@ -32,7 +32,7 @@ func (h *IncomingHandler) DisplayCampaignSummary(c *fiber.Ctx) error {
 		ReportType:           c.Query("report-type"),
 		Country:              c.Query("country"),
 		Operator:             c.Query("operator"),
-		PartnerName:          c.Query("partner-name"),
+		PartnerName:          c.Query("partner_name"),
 		Adnet:                c.Query("adnet"),
 		Service:              c.Query("service"),
 		DataIndicators:       dataIndicators,
@@ -74,7 +74,7 @@ func (h *IncomingHandler) DisplayCampaignSummaryChart(c *fiber.Ctx) error {
 		ReportType:           c.Query("report-type"),
 		Country:              c.Query("country"),
 		Operator:             c.Query("operator"),
-		PartnerName:          c.Query("partner-name"),
+		PartnerName:          c.Query("partner_name"),
 		CampaignName:         c.Query("campaign-name"),
 		Adnet:                c.Query("adnet"),
 		Service:              c.Query("service"),
@@ -464,7 +464,7 @@ func generateSummaryValue(data []entity.CampaignSummaryMonitoring, params entity
 		}
 
 		for operator, campaigns := range operators {
-			operatorKey := fmt.Sprintf("%s|%s", country, operator)
+			operatorKey := fmt.Sprintf("%s|%s", strings.ToUpper(country), strings.ToUpper(operator))
 			operatorData := map[string]interface{}{}
 
 			for _, indicator := range params.DataIndicators {

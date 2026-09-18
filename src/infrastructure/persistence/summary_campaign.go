@@ -532,9 +532,9 @@ func formatQueryIndicators(selects []string, dataType string) []string {
 			case "waki_revenue":
 				formattedValue = "SUM(saaf - sbaf) AS waki_revenue"
 			case "target_budget":
-				formattedValue = "SUM(target_monthly_budget) AS target_budget"
+				formattedValue = "MAX(target_monthly_budget) AS target_budget"
 			case "budget_usage":
-				formattedValue = "SUM(CASE WHEN target_daily_budget = 0 THEN 0 ELSE (saaf / target_daily_budget * 100) END) AS budget_usage"
+				formattedValue = "CASE WHEN MAX(target_monthly_budget) = 0 THEN 0 ELSE SUM(saaf) / MAX(target_monthly_budget) * 100 END AS budget_usage"
 			case "spending_to_adnets":
 				formattedValue = "SUM(sbaf) AS spending_to_adnets"
 			case "total_spending":
@@ -548,7 +548,7 @@ func formatQueryIndicators(selects []string, dataType string) []string {
 			case "traffic":
 				formattedValue = "SUM(landing) AS traffic"
 			case "budget":
-				formattedValue = "SUM(target_daily_budget) AS budget"
+				formattedValue = "MAX(target_monthly_budget) AS budget"
 			case "revenue":
 				formattedValue = "SUM(revenue) AS revenue"
 			default:
@@ -642,9 +642,9 @@ func (r *BaseModel) GetSummaryCampaignBudgetMonitoring(params entity.ParamsCampa
 		startDate, endDate = today, today
 	case "YESTERDAY":
 		startDate, endDate = today.AddDate(0, 0, -1), today.AddDate(0, 0, -1)
-	case "LAST_7_DAY":
+	case "LAST_7_DAY", "LAST_7_DAYS":
 		startDate, endDate = today.AddDate(0, 0, -6), today
-	case "LAST_30_DAY":
+	case "LAST_30_DAY", "LAST_30_DAYS":
 		startDate, endDate = today.AddDate(0, -1, 0), today
 	case "THIS_MONTH":
 		startDate = time.Date(today.Year(), today.Month(), 1, 0, 0, 0, 0, today.Location())
@@ -713,13 +713,12 @@ func formatQueryIndicatorsBudget(selects []string, dataType string) []string {
 
 	for _, value := range selects {
 		var formattedValue string
-		fmt.Println("indicators:", value)
 		if dataType == "monthly_report" {
 			switch value {
 			case "budget":
-				formattedValue = "SUM(target_daily_budget) AS budget"
+				formattedValue = "MAX(target_monthly_budget) AS budget"
 			case "target_budget":
-				formattedValue = "SUM(target_daily_budget) AS target_budget"
+				formattedValue = "MAX(target_monthly_budget) AS target_budget"
 			case "spending":
 				formattedValue = "SUM(saaf) AS spending"
 			case "mo":
@@ -727,7 +726,7 @@ func formatQueryIndicatorsBudget(selects []string, dataType string) []string {
 			case "waki_revenue":
 				formattedValue = "SUM(saaf - sbaf) AS waki_revenue"
 			case "budget_usage":
-				formattedValue = "SUM(CASE WHEN target_daily_budget = 0 THEN 0 ELSE (saaf / target_daily_budget * 100) END) AS budget_usage"
+				formattedValue = "CASE WHEN MAX(target_monthly_budget) = 0 THEN 0 ELSE SUM(saaf) / MAX(target_monthly_budget) * 100 END AS budget_usage"
 			case "spending_to_adnets":
 				formattedValue = "SUM(sbaf) AS spending_to_adnets"
 			case "total_spending":
