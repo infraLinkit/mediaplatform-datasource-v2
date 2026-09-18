@@ -323,7 +323,7 @@ func (r *BaseModel) GetDisplayMainstreamReport(o entity.DisplayCPAReport, allowe
 
 	 */
 	t_query := r.DB.Model(&entity.SummaryCampaign{}).Where("campaign_objective LIKE ?", "%MAINSTREAM%").
-		Where("mo_received > 0").
+		Where("(mo_received > 0 OR saaf > 0)").
 		Where("company IN ?", allowedCompanies).
 		Where("adnet IN ?", allowedAgencies)
 
@@ -334,7 +334,7 @@ func (r *BaseModel) GetDisplayMainstreamReport(o entity.DisplayCPAReport, allowe
 		price_per_mo,
 		revenue
 	`).Where("campaign_objective LIKE ?", "%MAINSTREAM%").
-		Where("mo_received > 0").
+		Where("(mo_received > 0 OR saaf > 0)").
 		Where("company IN ?", allowedCompanies).
 		Where("adnet IN ?", allowedAgencies)
 
@@ -480,9 +480,9 @@ func (r *BaseModel) GetDisplayMainstreamReport(o entity.DisplayCPAReport, allowe
 			 SUM(clicked) as clicked,
 			 SUM(saaf) as saaf,
 			 SUM(sbaf) as sbaf,
-			 SUM(price_per_mo) as price_per_mo,
+			 CASE WHEN SUM(mo_received)>0 THEN ROUND(SUM(saaf)::numeric / SUM(mo_received)::numeric, 5) ELSE 0 END as price_per_mo,
 		     SUM(revenue) as revenue,
-			 SUM(po) as po`).Row().Scan(
+			 AVG(po) as po`).Row().Scan(
 			&total_summary.MoReceived,
 			&total_summary.Postback,
 			&total_summary.Landing,
@@ -714,12 +714,8 @@ func (r *BaseModel) GetDisplayCostReport(o entity.DisplayCostReport, allowedAdne
 				adnet,
 				SUM(mo_received)                    AS mo_received,
 				SUM(postback)                       AS conversion,
-				SUM(CASE WHEN campaign_objective = 'UPLOAD SMS' THEN sbaf
-				         ELSE po * postback END)    AS cost,
-				SUM(CASE WHEN campaign_objective = 'UPLOAD SMS' THEN saaf
-				         WHEN LOWER(client_type) = 'external'   THEN (mo_received * poaf)
-				         ELSE (total_waki_agency_fee + (po * postback) + technical_fee)
-				    END)                            AS saaf,
+				SUM(sbaf)                           AS cost,
+				SUM(saaf)                           AS saaf,
 				's2s'                               AS type,
 				country,
 				operator,
@@ -838,22 +834,8 @@ func (r *BaseModel) GetDisplayCostReportByCountry(o entity.DisplayCostReport, al
 		adnet,
 		SUM(mo_received) AS mo_received,
 		SUM(postback) AS conversion,
-		SUM(
-			CASE
-				WHEN campaign_objective = 'UPLOAD SMS'
-					THEN sbaf
-				ELSE po * postback
-			END
-		) AS cost,
-		SUM(
-			CASE
-				WHEN campaign_objective = 'UPLOAD SMS'
-					THEN saaf
-				WHEN LOWER(client_type) = 'external'
-					THEN mo_received * poaf
-				ELSE total_waki_agency_fee + (po * postback) + technical_fee
-			END
-		) AS saaf,
+		SUM(sbaf) AS cost,
+		SUM(saaf) AS saaf,
 		's2s' AS type,
 		country,
 		operator,
@@ -1014,23 +996,9 @@ func (r *BaseModel) GetDisplayCostReportDetail(o entity.DisplayCostReport, allow
 		SUM(postback) AS conversion,
 		SUM(mo_received) AS mo_received,
 
-		SUM(
-			CASE
-				WHEN campaign_objective = 'UPLOAD SMS'
-				THEN sbaf
-				ELSE po * postback
-			END
-		) AS cost,
+		SUM(sbaf) AS cost,
 
-		SUM(
-			CASE
-				WHEN campaign_objective = 'UPLOAD SMS'
-				THEN saaf
-				WHEN LOWER(client_type) = 'external'
-				THEN mo_received * poaf
-				ELSE total_waki_agency_fee + (po * postback) + technical_fee
-			END
-		) AS saaf,
+		SUM(saaf) AS saaf,
 
 		's2s' AS type
 
@@ -1183,21 +1151,24 @@ func (r *BaseModel) AddSMSReport(s entity.SummaryCampaign) error {
 	?, -- sbaf
 	?, -- saaf
 	?, -- cpa
-	0, cd.url_landing, cd.url_landing, ?, ?,
-	?, -- ratio_receive 
+	?, -- revenue
+	cd.url_landing, cd.url_landing, 500, ?,
+	?, -- ratio_receive
 	pt.company, pt.client_type, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'UPLOAD SMS',
-	'NA', 0, 0, 0
-	from campaign_details cd 
-	left join partners as pt on pt.name=cd.partner 
-	left join campaigns as cp on cp.id = cd.campaign_id::INTEGER where 
+	'NA', ?, 0, 0
+	from campaign_details cd
+	left join partners as pt on pt.name=cd.partner
+	left join campaigns as cp on cp.id = cd.campaign_id::INTEGER where
 	cd.url_service_key = ?
-	ON CONFLICT (summary_date,url_service_key,campaign_id,country,operator,partner,adnet,service,campaign_objective) 
-	DO UPDATE SET 
+	ON CONFLICT (summary_date,url_service_key,campaign_id,country,operator,partner,adnet,service,campaign_objective)
+	DO UPDATE SET
 		updated_at=NOW(),
 		po = EXCLUDED.po,
 		cpa = EXCLUDED.cpa,
 		sbaf = EXCLUDED.sbaf,
 		saaf = EXCLUDED.saaf,
+		revenue = EXCLUDED.revenue,
+		price_per_mo = EXCLUDED.price_per_mo,
 		ratio_send = EXCLUDED.ratio_send,
 		ratio_receive = EXCLUDED.ratio_receive,
 		mo_received = EXCLUDED.mo_received,
@@ -1205,8 +1176,8 @@ func (r *BaseModel) AddSMSReport(s entity.SummaryCampaign) error {
 
 	q := r.DB.Exec(SQL, s.SummaryDate, s.Operator, s.Partner, s.Adnet,
 		s.Service, s.ShortCode, s.MoReceived, s.Postback,
-		s.PO, s.SBAF, s.SAAF, s.CPA, 500, s.RatioSend, s.RatioReceive,
-		s.URLServiceKey)
+		s.PO, s.SBAF, s.SAAF, s.CPA, s.Revenue, s.RatioSend, s.RatioReceive,
+		s.PricePerMO, s.URLServiceKey)
 	return q.Error
 }
 
