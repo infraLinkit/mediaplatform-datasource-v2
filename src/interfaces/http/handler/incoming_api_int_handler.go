@@ -520,7 +520,7 @@ func (h *IncomingHandler) UpsertExcel(c *fiber.Ctx) error {
 	}
 	//fmt.Println("BODY CAMPAIGN URL SERVICE : ", campaign.URLServiceKey)
 
-	if campaign.CampaignObjective == "UPLOAD SMS" {
+	if campaign.CampaignObjective == "UPLOAD SMS" || campaign.CampaignObjective == "UPLOAD SMS MAINSTREAM" {
 
 		// UPSERT QUERY
 		campaign.SuccessFP = 0
@@ -533,7 +533,23 @@ func (h *IncomingHandler) UpsertExcel(c *fiber.Ctx) error {
 		campaign.CrPostback = 0
 		campaign.CrMO = 0
 
-		err := h.DS.AddSMSReport(campaign)
+		// campaign.CPA is left as-is (the raw "cost" column from the Excel row).
+		// PricePerMO/Revenue are derived from the SBAF/SAAF already supplied by
+		// the Excel row instead of recomputing spend via FormulaCPA (no PO/POAF/
+		// agency fee inputs exist on an SMS upload row).
+		if campaign.MoReceived > 0 {
+			campaign.PricePerMO = campaign.SAAF / float64(campaign.MoReceived)
+		} else {
+			campaign.PricePerMO = 0
+		}
+		campaign.Revenue = campaign.SAAF - campaign.SBAF
+
+		var err error
+		if campaign.CampaignObjective == "UPLOAD SMS MAINSTREAM" {
+			err = h.DS.AddSMSReportMainstream(campaign)
+		} else {
+			err = h.DS.AddSMSReport(campaign)
+		}
 
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
