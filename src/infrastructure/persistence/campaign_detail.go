@@ -84,7 +84,13 @@ func (r *BaseModel) UpdateCampaign(o entity.Campaign) error {
 
 	result := r.DB.Model(&o).
 		Where("campaign_id = ?", o.CampaignId).
-		Updates(entity.Campaign{Name: o.Name, CampaignObjective: o.CampaignObjective, Country: o.Country, Advertiser: o.Advertiser})
+		Updates(map[string]interface{}{
+			"name":               o.Name,
+			"campaign_objective": o.CampaignObjective,
+			"country":            o.Country,
+			"advertiser":         o.Advertiser,
+			"is_bypass_ip_range": o.IsBypassIpRange,
+		})
 
 	r.Logs.Debug(fmt.Sprintf("affected: %d, is error : %#v", result.RowsAffected, result.Error))
 

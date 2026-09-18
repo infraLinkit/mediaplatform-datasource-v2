@@ -996,7 +996,20 @@ func (h *IncomingHandler) UpdateCampaign(c *fiber.Ctx) error {
 		CampaignObjective: obj.Objective,
 		Country:           obj.Country,
 		Advertiser:        obj.Advertiser,
+		IsBypassIpRange:   obj.IsBypassIpRange,
 	})
+
+	var singleURLData entity.DataSingleURL
+	if obj.Objective == "SINGLE URL MAINSTREAM" || obj.Objective == "SINGLE URL S2S" {
+		singleURLData = entity.DataSingleURL{
+			SingleURLServiceKey: external.Concat("-", "S", obj.CampaignId),
+			Country:             obj.Country,
+			Objective:           obj.Objective,
+			MCC:                 obj.MCC,
+			IsBypassIpRange:     obj.IsBypassIpRange,
+			Data:                []entity.URLServiceKeyChilds{},
+		}
+	}
 
 	for _, dc := range obj.DataConfig {
 		country := strings.ToUpper(dc.Country)
@@ -1034,6 +1047,13 @@ func (h *IncomingHandler) UpdateCampaign(c *fiber.Ctx) error {
 				campaign_detail_id,
 				entity.DataConfig{Country: country},
 			)
+		}
+
+		if obj.Objective == "SINGLE URL MAINSTREAM" || obj.Objective == "SINGLE URL S2S" {
+			singleURLData.Data = append(singleURLData.Data, entity.URLServiceKeyChilds{
+				URLServiceKey: dc.URLServiceKey,
+				Operator:      dc.Operator,
+			})
 		}
 
 		cfgRediskey := external.Concat("-", dc.URLServiceKey, "configIdx")
@@ -1193,6 +1213,7 @@ func (h *IncomingHandler) UpdateCampaign(c *fiber.Ctx) error {
 			PortalURL: dc.PortalURL,
 			IsEvina: dc.IsEvina,
 			EvinaRedirectFraudURL: dc.EvinaRedirectFraudURL,
+			IsBypassIpRange: dc.IsBypassIpRange,
 		}
 
 		if cd, _ := h.DS.GetCampaignByCampaignDetailId(entity.CampaignDetail{
@@ -1409,6 +1430,11 @@ func (h *IncomingHandler) UpdateCampaign(c *fiber.Ctx) error {
 
 			h.DS.SetData(cfgRediskey, "$", string(cfgDataConfig))
 		}
+	}
+
+	if obj.Objective == "SINGLE URL MAINSTREAM" || obj.Objective == "SINGLE URL S2S" {
+		singleURLDataJSON, _ := json.Marshal(singleURLData)
+		h.DS.SetData(singleURLData.SingleURLServiceKey, "$", string(singleURLDataJSON))
 	}
 
 	if err := tx.Commit().Error; err != nil {
