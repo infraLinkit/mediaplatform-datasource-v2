@@ -209,6 +209,70 @@ func (r *BaseModel) GetCampaignROASCohortSumByCampaign(date_range, date_before, 
 	return out, nil
 }
 
+// GetCampaignROASCohortROIByCampaign averages roi_months_payback per
+// url_service_key — same shape as GetCampaignROASCohortSumByCampaign, but
+// for the "months to payback" ROI figure instead of gross revenue. Unlike
+// EstROAS, ROI months is already in the right unit (months) as-is — callers
+// use the raw average, no est_ltv/cac math needed.
+func (r *BaseModel) GetCampaignROASCohortROIByCampaign(date_range, date_before, date_after, country, service string) (map[string]float64, error) {
+	type row struct {
+		URLServiceKey string  `gorm:"column:url_service_key"`
+		AvgROIMonths  float64 `gorm:"column:avg_roi_months"`
+	}
+	var rows []row
+	if err := r.cohortGrossRevenueByGroup(date_range, date_before, date_after, country, service,
+		"url_service_key, AVG(roi_months_payback) as avg_roi_months",
+		"url_service_key", &rows); err != nil {
+		return nil, err
+	}
+	out := make(map[string]float64, len(rows))
+	for _, rr := range rows {
+		out[rr.URLServiceKey] = rr.AvgROIMonths
+	}
+	return out, nil
+}
+
+// GetCampaignROASCohortROIByRollup averages roi_months_payback per
+// (country, operator, service). Key format: "<country>|<operator>|<service>".
+func (r *BaseModel) GetCampaignROASCohortROIByRollup(date_range, date_before, date_after, country, service string) (map[string]float64, error) {
+	type row struct {
+		Country      string  `gorm:"column:country"`
+		Operator     string  `gorm:"column:operator"`
+		Service      string  `gorm:"column:service"`
+		AvgROIMonths float64 `gorm:"column:avg_roi_months"`
+	}
+	var rows []row
+	if err := r.cohortGrossRevenueByGroup(date_range, date_before, date_after, country, service,
+		"country, operator, service, AVG(roi_months_payback) as avg_roi_months",
+		"country, operator, service", &rows); err != nil {
+		return nil, err
+	}
+	out := make(map[string]float64, len(rows))
+	for _, rr := range rows {
+		out[rr.Country+"|"+resolveOperator(rr.Operator)+"|"+rr.Service] = rr.AvgROIMonths
+	}
+	return out, nil
+}
+
+// GetCampaignROASCohortROIByAdnet averages roi_months_payback per adnet.
+func (r *BaseModel) GetCampaignROASCohortROIByAdnet(date_range, date_before, date_after, country, service string) (map[string]float64, error) {
+	type row struct {
+		Adnet        string  `gorm:"column:adnet"`
+		AvgROIMonths float64 `gorm:"column:avg_roi_months"`
+	}
+	var rows []row
+	if err := r.cohortGrossRevenueByGroup(date_range, date_before, date_after, country, service,
+		"adnet, AVG(roi_months_payback) as avg_roi_months",
+		"adnet", &rows); err != nil {
+		return nil, err
+	}
+	out := make(map[string]float64, len(rows))
+	for _, rr := range rows {
+		out[rr.Adnet] = rr.AvgROIMonths
+	}
+	return out, nil
+}
+
 // GetCampaignROASCohortSumByRollup sums estimated_gross_revenue_full per
 // (country, operator, service), for GetRollup's per-row EstROAS. Key format:
 // "<country>|<operator>|<service>".

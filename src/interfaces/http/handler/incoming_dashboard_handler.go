@@ -180,6 +180,19 @@ func (h *IncomingHandler) DisplayRollup(c *fiber.Ctx) error {
 	})
 }
 
+func (h *IncomingHandler) DisplayCampaignHierarchy(c *fiber.Ctx) error {
+	m := c.Queries()
+	country := m["country"]
+	service := m["service"]
+	allowedAdnets, _ := c.Locals("adnets").([]string)
+	allowedCompanies, _ := c.Locals("companies").([]string)
+	data, _ := h.DS.GetCampaignHierarchy(m["date_range"], m["date_before"], m["date_after"], m["client_type"], country, service, allowedAdnets, allowedCompanies)
+	return c.Status(fiber.StatusOK).JSON(entity.GlobalResponseWithDataTable{
+		Draw: 0, Code: fiber.StatusOK, Message: config.OK_DESC,
+		Data: data, RecordsTotal: 1, RecordsFiltered: 1,
+	})
+}
+
 func (h *IncomingHandler) DisplayAdnetStats(c *fiber.Ctx) error {
 	m := c.Queries()
 	country := m["country"]

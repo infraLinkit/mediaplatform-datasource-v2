@@ -13,6 +13,7 @@ func RegisterDashboard(grp fiber.Router, h *handler.IncomingHandler) {
 	grp.Get("get-ops-stats", h.DisplayOpsStats)
 	grp.Get("get-alerts", h.DisplayAlerts)
 	grp.Get("get-rollup", h.DisplayRollup)
+	grp.Get("get-campaign-hierarchy", h.DisplayCampaignHierarchy)
 	grp.Get("get-adnet-stats", h.DisplayAdnetStats)
 	grp.Get("get-heatmap", h.DisplayHeatmap)
 	grp.Get("get-campaign-daily", h.DisplayCampaignDaily)

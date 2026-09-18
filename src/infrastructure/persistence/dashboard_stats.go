@@ -355,6 +355,7 @@ func (r *BaseModel) GetRollup(date_range, date_before, date_after, client_type, 
 	var results []entity.RollupRow
 
 	cohortSums, cohortErr := r.GetCampaignROASCohortSumByRollup(date_range, date_before, date_after, country, service)
+	cohortROI, cohortROIErr := r.GetCampaignROASCohortROIByRollup(date_range, date_before, date_after, country, service)
 
 	for rows.Next() {
 		var row entity.RollupRow
@@ -375,9 +376,252 @@ func (r *BaseModel) GetRollup(date_range, date_before, date_after, client_type, 
 			sumGrossRevenue, hasCohort := cohortSums[row.Country+"|"+row.Operator+"|"+row.Service]
 			row.EstROAS = estROASOrFallback(sumGrossRevenue, hasCohort, row.MO, row.CAC, row.ROAS)
 		}
+		if cohortROIErr == nil {
+			roiMonths, hasROI := cohortROI[row.Country+"|"+row.Operator+"|"+row.Service]
+			if hasROI {
+				row.ROIMonths = roiMonths
+				row.HasROI = true
+			}
+		}
 
 		results = append(results, row)
 	}
+	return results, nil
+}
+
+// GetCampaignHierarchy returns one row per campaign, each carrying its full
+// country/operator/service/adnet path — the FE builds the 5-level
+// Country → Operator → Service → Adnet → Campaign accordion by grouping
+// these rows client-side (parent levels are pure aggregation of their
+// children, same convention as GetRollup's 3-level tree).
+//
+// Rows come from two sources, tagged by Source:
+//   - "summary": summary_campaigns, keyed by url_service_key. CR/CPA/Payout
+//     are computed here (landing/postback/saaf/sbaf are all present).
+//   - "api": api_pin_reports, keyed by campaign_id — covers API-objective
+//     traffic that never lands in summary_campaigns (mirrors GetReport's own
+//     api_pin_reports merge). It has no landing/clicked column, so CR is
+//     left at 0 (FE renders "—"); Status is unknown for the same reason.
+//
+// EstROAS is resolved per campaign from campaign_roas_cohorts and reported
+// with an explicit HasEstROAS flag — unlike GetRollup/GetCampaign, this
+// endpoint does NOT fall back to realized ROAS when no cohort row matches,
+// since the caller wants a bare "no data" signal rather than a duplicate
+// number.
+func (r *BaseModel) GetCampaignHierarchy(date_range, date_before, date_after, client_type, country, service string, allowedAdnets, allowedCompanies []string) ([]entity.HierarchyCampaignRow, error) {
+	query := r.DB.Model(&entity.SummaryCampaign{})
+	switch date_range {
+	case "TODAY":
+		query = query.Where("summary_date = CURRENT_DATE")
+	case "YESTERDAY":
+		query = query.Where("summary_date = CURRENT_DATE - INTERVAL '1 DAY'")
+	case "LAST7DAY":
+		query = query.Where("summary_date BETWEEN CURRENT_DATE - INTERVAL '7 DAY' AND CURRENT_DATE")
+	case "LAST30DAY":
+		query = query.Where("summary_date BETWEEN CURRENT_DATE - INTERVAL '30 DAY' AND CURRENT_DATE")
+	case "THISMONTH":
+		query = query.Where("summary_date >= DATE_TRUNC('month', CURRENT_DATE)")
+	case "LASTMONTH":
+		query = query.Where("summary_date BETWEEN DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 MONTH') AND DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 DAY'")
+	case "CUSTOMRANGE":
+		query = query.Where("summary_date BETWEEN ? AND ?", date_before, date_after)
+	default:
+		query = query.Where("summary_date >= DATE_TRUNC('month', CURRENT_DATE)")
+	}
+	if client_type != "" {
+		query = query.Where("client_type = ?", client_type)
+	}
+	if country != "" {
+		query = query.Where("country = ?", country)
+	}
+	if service != "" {
+		query = query.Where("service = ?", service)
+	}
+	if len(allowedAdnets) > 0 {
+		query = query.Where("adnet IN ?", allowedAdnets)
+	}
+	if len(allowedCompanies) > 0 {
+		query = query.Where("company IN ?", allowedCompanies)
+	}
+
+	type summaryAgg struct {
+		Country    string  `gorm:"column:country"`
+		Operator   string  `gorm:"column:operator"`
+		Service    string  `gorm:"column:service"`
+		Adnet      string  `gorm:"column:adnet"`
+		CampaignID string  `gorm:"column:campaign_id"`
+		ClientType string  `gorm:"column:client_type"`
+		MO         int     `gorm:"column:mo"`
+		Landing    int     `gorm:"column:landing"`
+		Postback   int     `gorm:"column:postback"`
+		Spend      float64 `gorm:"column:spend"`
+		Revenue    float64 `gorm:"column:revenue"`
+		ActiveN    int64   `gorm:"column:active_n"`
+	}
+	var summaryRows []summaryAgg
+	err := query.Select(`country, operator, service, adnet,
+		url_service_key as campaign_id,
+		MAX(client_type) as client_type,
+		SUM(mo_received) as mo,
+		SUM(landing) as landing,
+		SUM(postback) as postback,
+		SUM(sbaf) as spend,
+		SUM(saaf) as revenue,
+		SUM(CASE WHEN status THEN 1 ELSE 0 END) as active_n`).
+		Group("country, operator, service, adnet, url_service_key").Order("spend DESC").Scan(&summaryRows).Error
+	if err != nil {
+		return nil, err
+	}
+
+	cohortSums, cohortErr := r.GetCampaignROASCohortSumByCampaign(date_range, date_before, date_after, country, service)
+	cohortROI, cohortROIErr := r.GetCampaignROASCohortROIByCampaign(date_range, date_before, date_after, country, service)
+
+	var results []entity.HierarchyCampaignRow
+	for _, s := range summaryRows {
+		row := entity.HierarchyCampaignRow{
+			Country: s.Country, Operator: s.Operator, Service: s.Service, Adnet: s.Adnet,
+			CampaignID: s.CampaignID, ClientType: s.ClientType,
+			MO: s.MO, Spend: s.Spend, Revenue: s.Revenue, Source: "summary",
+		}
+		if row.Spend > 0 {
+			row.ROAS = row.Revenue / row.Spend * 100
+		}
+		if row.Revenue > 0 {
+			row.RecoveryDays = row.Spend * 30.0 / row.Revenue
+		}
+		if row.MO > 0 {
+			row.CPA = row.Revenue / float64(row.MO)  // CPA = SAAF / MO, same formula as FormulaCPA
+			row.Payout = row.Spend / float64(row.MO) // Payout = SBAF / MO — adnet payout rate per MO
+		}
+		if s.Landing > 0 {
+			row.CR = float64(s.MO) / float64(s.Landing) * 100
+		}
+		row.Status = "paused"
+		if s.ActiveN > 0 {
+			row.Status = "active"
+		}
+
+		if cohortErr == nil {
+			cac := 0.0
+			if row.MO > 0 {
+				cac = row.Spend / float64(row.MO)
+			}
+			sumGrossRevenue, hasCohort := cohortSums[row.CampaignID]
+			if hasCohort && row.MO > 0 && cac > 0 {
+				row.EstROAS = (sumGrossRevenue / float64(row.MO)) / cac * 100
+				row.HasEstROAS = true
+			}
+		}
+		if cohortROIErr == nil {
+			roiMonths, hasROI := cohortROI[row.CampaignID]
+			if hasROI {
+				row.ROIMonths = roiMonths
+				row.HasROI = true
+			}
+		}
+
+		results = append(results, row)
+	}
+
+	// Merge api_pin_reports — API-objective traffic that never lands in
+	// summary_campaigns (same reasoning as GetReport's own API merge).
+	// Skipped for internal-only scope, since api_pin_reports has no
+	// client_type column and is always external-facing traffic.
+	if client_type != "internal" {
+		apiQ := r.DB.Model(&entity.ApiPinReport{})
+		switch date_range {
+		case "TODAY":
+			apiQ = apiQ.Where("date_send = CURRENT_DATE")
+		case "YESTERDAY":
+			apiQ = apiQ.Where("date_send = CURRENT_DATE - INTERVAL '1 DAY'")
+		case "LAST7DAY":
+			apiQ = apiQ.Where("date_send BETWEEN CURRENT_DATE - INTERVAL '7 DAY' AND CURRENT_DATE")
+		case "LAST30DAY":
+			apiQ = apiQ.Where("date_send BETWEEN CURRENT_DATE - INTERVAL '30 DAY' AND CURRENT_DATE")
+		case "THISMONTH":
+			apiQ = apiQ.Where("date_send >= DATE_TRUNC('month', CURRENT_DATE)")
+		case "LASTMONTH":
+			apiQ = apiQ.Where("date_send BETWEEN DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 MONTH') AND DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 DAY'")
+		case "CUSTOMRANGE":
+			apiQ = apiQ.Where("date_send BETWEEN ? AND ?", date_before, date_after)
+		default:
+			apiQ = apiQ.Where("date_send >= DATE_TRUNC('month', CURRENT_DATE)")
+		}
+		if country != "" {
+			apiQ = apiQ.Where("country = ?", country)
+		}
+		if service != "" {
+			apiQ = apiQ.Where("service = ?", service)
+		}
+		if len(allowedAdnets) > 0 {
+			apiQ = apiQ.Where("adnet IN ?", allowedAdnets)
+		}
+		if len(allowedCompanies) > 0 {
+			apiQ = apiQ.Where("company IN ?", allowedCompanies)
+		}
+
+		type apiAgg struct {
+			Country    string  `gorm:"column:country"`
+			Operator   string  `gorm:"column:operator"`
+			Service    string  `gorm:"column:service"`
+			Adnet      string  `gorm:"column:adnet"`
+			CampaignID string  `gorm:"column:campaign_id"`
+			MO         int     `gorm:"column:mo"`
+			Spend      float64 `gorm:"column:spend"`
+			Revenue    float64 `gorm:"column:revenue"`
+		}
+		var apiRows []apiAgg
+		apiErr := apiQ.Select(`country, operator, service, adnet, campaign_id,
+			SUM(total_mo) as mo,
+			SUM(sbaf) as spend,
+			SUM(saaf) as revenue`).
+			Group("country, operator, service, adnet, campaign_id").Scan(&apiRows).Error
+		if apiErr == nil {
+			for _, a := range apiRows {
+				if a.CampaignID == "" {
+					continue
+				}
+				row := entity.HierarchyCampaignRow{
+					Country: a.Country, Operator: a.Operator, Service: a.Service, Adnet: a.Adnet,
+					CampaignID: a.CampaignID, ClientType: "external",
+					MO: a.MO, Spend: a.Spend, Revenue: a.Revenue, Source: "api",
+				}
+				if row.Spend > 0 {
+					row.ROAS = row.Revenue / row.Spend * 100
+				}
+				if row.Revenue > 0 {
+					row.RecoveryDays = row.Spend * 30.0 / row.Revenue
+				}
+				if row.MO > 0 {
+					row.CPA = row.Revenue / float64(row.MO)
+					row.Payout = row.Spend / float64(row.MO)
+				}
+				// api_pin_reports has no landing/clicked column (CR stays
+				// 0 → FE renders "—") and no status column (Status stays
+				// "" → FE renders "—").
+				if cohortErr == nil {
+					cac := 0.0
+					if row.MO > 0 {
+						cac = row.Spend / float64(row.MO)
+					}
+					sumGrossRevenue, hasCohort := cohortSums[row.CampaignID]
+					if hasCohort && row.MO > 0 && cac > 0 {
+						row.EstROAS = (sumGrossRevenue / float64(row.MO)) / cac * 100
+						row.HasEstROAS = true
+					}
+				}
+				if cohortROIErr == nil {
+					roiMonths, hasROI := cohortROI[row.CampaignID]
+					if hasROI {
+						row.ROIMonths = roiMonths
+						row.HasROI = true
+					}
+				}
+				results = append(results, row)
+			}
+		}
+	}
+
 	return results, nil
 }
 
@@ -428,6 +672,7 @@ func (r *BaseModel) GetAdnetStats(date_range, date_before, date_after, client_ty
 	var results []entity.AdnetStat
 
 	cohortSums, cohortErr := r.GetCampaignROASCohortSumByAdnet(date_range, date_before, date_after, country, service)
+	cohortROI, cohortROIErr := r.GetCampaignROASCohortROIByAdnet(date_range, date_before, date_after, country, service)
 
 	for rows.Next() {
 		var row entity.AdnetStat
@@ -446,6 +691,13 @@ func (r *BaseModel) GetAdnetStats(date_range, date_before, date_after, client_ty
 		if cohortErr == nil {
 			sumGrossRevenue, hasCohort := cohortSums[row.Adnet]
 			row.EstROAS = estROASOrFallback(sumGrossRevenue, hasCohort, row.MO, row.CAC, row.ROAS)
+		}
+		if cohortROIErr == nil {
+			roiMonths, hasROI := cohortROI[row.Adnet]
+			if hasROI {
+				row.ROIMonths = roiMonths
+				row.HasROI = true
+			}
 		}
 
 		results = append(results, row)

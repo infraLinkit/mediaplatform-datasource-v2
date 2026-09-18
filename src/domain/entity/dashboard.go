@@ -141,6 +141,7 @@ type (
 		Profit        float64 `json:"profit"`
 		ROAS          float64 `json:"roas"`
 		EstROAS       float64 `json:"est_roas"`
+		ROIMonths     float64 `json:"roi_months"`
 	}
 
 	SummaryTopBestCampaign struct {
@@ -186,9 +187,34 @@ type (
 		Revenue      float64 `json:"revenue"`
 		ROAS         float64 `json:"roas"`
 		EstROAS      float64 `json:"est_roas"`
+		ROIMonths    float64 `json:"roi_months"`
+		HasROI       bool    `json:"has_roi"`
 		MarginPct    float64 `json:"margin_pct"`
 		RecoveryDays float64 `json:"recovery_days"`
 		CAC          float64 `json:"cac"`
+	}
+
+	HierarchyCampaignRow struct {
+		Country      string  `json:"country"`
+		Operator     string  `json:"operator"`
+		Service      string  `json:"service"`
+		Adnet        string  `json:"adnet"`
+		CampaignID   string  `json:"campaign_id"`
+		ClientType   string  `json:"client_type"`
+		MO           int     `json:"mo"`
+		Spend        float64 `json:"spend"`
+		Revenue      float64 `json:"revenue"`
+		ROAS         float64 `json:"roas"`
+		EstROAS      float64 `json:"est_roas"`
+		HasEstROAS   bool    `json:"has_est_roas"`
+		ROIMonths    float64 `json:"roi_months"`
+		HasROI       bool    `json:"has_roi"`
+		RecoveryDays float64 `json:"recovery_days"`
+		CR           float64 `json:"cr"`
+		CPA          float64 `json:"cpa"`
+		Payout       float64 `json:"payout"`
+		Status       string  `json:"status"`
+		Source       string  `json:"source"`
 	}
 
 	AdnetStat struct {
@@ -199,6 +225,8 @@ type (
 		Campaigns    int     `json:"campaigns"`
 		ROAS         float64 `json:"roas"`
 		EstROAS      float64 `json:"est_roas"`
+		ROIMonths    float64 `json:"roi_months"`
+		HasROI       bool    `json:"has_roi"`
 		RecoveryDays float64 `json:"recovery_days"`
 		CAC          float64 `json:"cac"`
 	}

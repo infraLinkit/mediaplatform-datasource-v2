@@ -363,6 +363,7 @@ func (r *BaseModel) GetCampaign(order_type string, order_by string, offset strin
 		var ss []entity.TopCampaign
 
 		cohortSums, cohortErr := r.GetCampaignROASCohortSumByCampaign(date_range, date_before, date_after, country, service)
+		cohortROI, cohortROIErr := r.GetCampaignROASCohortROIByCampaign(date_range, date_before, date_after, country, service)
 
 		for rows.Next() {
 			var s entity.TopCampaign
@@ -382,6 +383,12 @@ func (r *BaseModel) GetCampaign(order_type string, order_by string, offset strin
 					cac = s.SpendToAdnets / float64(s.MO)
 				}
 				s.EstROAS = estROASOrFallback(sumGrossRevenue, hasCohort, s.MO, cac, s.ROAS)
+			}
+			if cohortROIErr == nil {
+				roiMonths, hasROI := cohortROI[s.URLServiceKey]
+				if hasROI {
+					s.ROIMonths = roiMonths
+				}
 			}
 
 			c := r.DB.Model(&entity.Country{})
