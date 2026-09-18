@@ -7,6 +7,7 @@ import (
 
 func RegisterDashboard(grp fiber.Router, h *handler.IncomingHandler) {
 	grp.Get("get-data", h.DisplayDashboardData)
+	grp.Get("get-top-partner-spend", h.DisplayDashboardTopPartnerSpend)
 	grp.Get("get-top-campaign", h.DisplayDashboardTopCampaign)
 	grp.Get("get-report-list", h.DisplayDashboardReport)
 	grp.Get("get-country-stats", h.DisplayCountryStats)

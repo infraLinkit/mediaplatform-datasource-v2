@@ -125,6 +125,36 @@ func (h *IncomingHandler) DisplayDashboardData(c *fiber.Ctx) error {
 	return c.Status(Response.HttpStatus).JSON(Response.Rsp)
 }
 
+func (h *IncomingHandler) DisplayDashboardTopPartnerSpend(c *fiber.Ctx) error {
+	c.Set("Content-Type", "application/x-www-form-urlencoded")
+	c.Accepts("application/x-www-form-urlencoded")
+	c.AcceptsCharsets("utf-8", "iso-8859-1")
+
+	m := c.Queries()
+	date_range := m["date_range"]
+	date_before := m["date_before"]
+	date_after := m["date_after"]
+	client_type := m["client_type"]
+	country := m["country"]
+	service := m["service"]
+
+	TopPartnerSpend, _ := h.DS.GetPartnerSpend(client_type, date_range, date_before, date_after, country, service)
+
+	Response := entity.ReturnResponse{
+		HttpStatus: fiber.StatusOK,
+		Rsp: entity.GlobalResponseWithDataTable{
+			Draw:            0,
+			Code:            fiber.StatusOK,
+			Message:         config.OK_DESC,
+			Data:            TopPartnerSpend,
+			RecordsTotal:    1,
+			RecordsFiltered: 1,
+		},
+	}
+
+	return c.Status(Response.HttpStatus).JSON(Response.Rsp)
+}
+
 func (h *IncomingHandler) DisplayCountryStats(c *fiber.Ctx) error {
 	m := c.Queries()
 	country := m["country"]

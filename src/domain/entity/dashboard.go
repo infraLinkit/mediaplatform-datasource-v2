@@ -152,6 +152,12 @@ type (
 		Campaign []TopCampaign `json:"campaign"`
 	}
 
+	TopPartnerSpend struct {
+		Partner string  `json:"partner"`
+		Spend   float64 `json:"spend"`
+		Pct     float64 `json:"pct"`
+	}
+
 	CountryStat struct {
 		Country string  `json:"country"`
 		Spend   float64 `json:"spend"`
