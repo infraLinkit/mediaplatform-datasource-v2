@@ -135,9 +135,10 @@ func (r *BaseModel) PinReport(o entity.ApiPinReport) int {
 	return int(o.ID)
 }
 
-func (r *BaseModel) GetDisplayPinReport(o entity.DisplayPinReport) ([]entity.ApiPinReport, int64, error) {
+func (r *BaseModel) GetDisplayPinReport(o entity.DisplayPinReport, allowedAdnets []string, allowedCountries []string) ([]entity.ApiPinReportWithAlias, int64, entity.TotalSummaryPinReport, error) {
 	var totalRows int64
-	var ss []entity.ApiPinReport
+	var ss []entity.ApiPinReportWithAlias
+	var totals entity.TotalSummaryPinReport
 
 	query := r.DB.Model(&entity.ApiPinReport{}).Select(`
 		api_pin_reports.*,
@@ -145,56 +146,76 @@ func (r *BaseModel) GetDisplayPinReport(o entity.DisplayPinReport) ([]entity.Api
 		(payout_adn * total_postback) AS sbaf,
 		(CASE WHEN total_mo > 0 THEN (payout_af * total_postback) / total_mo ELSE 0 END) AS price_per_mo,
 		((payout_af * total_postback) - (payout_adn * total_postback)) AS waki_revenue
-	`)
+	`).Where("total_mo > 0").Where("adnet IN ?", allowedAdnets).Where("country IN ?", allowedCountries)
+
+	t_query := r.DB.Table("api_pin_reports").
+		Where("total_mo > 0").Where("adnet IN ?", allowedAdnets).
+		Where("country IN ?", allowedCountries)
 
 	if o.Action == "Search" {
 		if o.CampaignId != "" {
 			query = query.Where("campaign_id = ?", o.CampaignId)
+			t_query = t_query.Where("campaign_id = ?", o.CampaignId)
 		}
 		if o.Country != "" {
 			query = query.Where("country = ?", o.Country)
+			t_query = t_query.Where("country = ?", o.Country)
 		}
 		if o.Company != "" {
 			query = query.Where("company = ?", o.Company)
+			t_query = t_query.Where("company = ?", o.Company)
 		}
 		if o.Operator != "" {
 			query = query.Where("operator = ?", o.Operator)
+			t_query = t_query.Where("operator = ?", o.Operator)
 		}
 		if len(o.Adnets) > 0 {
 			query = query.Where("adnet IN ?", o.Adnets)
+			t_query = t_query.Where("adnet IN ?", o.Adnets)
 		}
 		if o.Service != "" {
 			query = query.Where("service = ?", o.Service)
+			t_query = t_query.Where("service = ?", o.Service)
 		}
 
 		if o.DateRange != "" {
 			switch strings.ToUpper(o.DateRange) {
 			case "TODAY":
 				query = query.Where("date_send = CURRENT_DATE")
+				t_query = t_query.Where("date_send = CURRENT_DATE")
 			case "YESTERDAY":
 				query = query.Where("date_send = CURRENT_DATE - INTERVAL '1 DAY'")
+				t_query = t_query.Where("date_send = CURRENT_DATE - INTERVAL '1 DAY'")
 			case "LAST7DAY":
 				query = query.Where("date_send BETWEEN CURRENT_DATE - INTERVAL '7 DAY' AND CURRENT_DATE")
+				t_query = t_query.Where("date_send BETWEEN CURRENT_DATE - INTERVAL '7 DAY' AND CURRENT_DATE")
 			case "LAST30DAY":
 				query = query.Where("date_send BETWEEN CURRENT_DATE - INTERVAL '30 DAY' AND CURRENT_DATE")
+				t_query = t_query.Where("date_send BETWEEN CURRENT_DATE - INTERVAL '30 DAY' AND CURRENT_DATE")
 			case "THISMONTH":
 				query = query.Where("date_send >= DATE_TRUNC('month', CURRENT_DATE)")
+				t_query = t_query.Where("date_send >= DATE_TRUNC('month', CURRENT_DATE)")
 			case "LASTMONTH":
 				query = query.Where("date_send BETWEEN DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 MONTH') AND DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 DAY'")
+				t_query = t_query.Where("date_send BETWEEN DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 MONTH') AND DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 DAY'")
 			case "CUSTOMRANGE":
 				query = query.Where("date_send BETWEEN ? AND ?", o.DateBefore, o.DateAfter)
+				t_query = t_query.Where("date_send BETWEEN ? AND ?", o.DateBefore, o.DateAfter)
 			default:
 				query = query.Where("date_send = ?", o.DateRange)
+				t_query = t_query.Where("date_send = ?", o.DateRange)
 			}
 		} else {
 			query = query.Where("date_send = CURRENT_DATE")
+			t_query = t_query.Where("date_send = CURRENT_DATE")
 		}
 	} else {
 		query = query.Where("date_send = CURRENT_DATE")
+		t_query = t_query.Where("date_send = CURRENT_DATE")
 	}
 
 	if err := query.Count(&totalRows).Error; err != nil {
-		return []entity.ApiPinReport{}, 0, err
+		return []entity.ApiPinReportWithAlias{}, 0, totals, err
 	}
 
 	if o.OrderColumn != "" {
@@ -202,7 +223,7 @@ func (r *BaseModel) GetDisplayPinReport(o entity.DisplayPinReport) ([]entity.Api
 		if strings.ToUpper(o.OrderDir) == "DESC" {
 			dir = "DESC"
 		}
-	
+
 		switch o.OrderColumn {
 		case "saaf":
 			query = query.Order(fmt.Sprintf("(payout_af * total_postback) %s", dir))
@@ -217,16 +238,40 @@ func (r *BaseModel) GetDisplayPinReport(o entity.DisplayPinReport) ([]entity.Api
 		}
 	} else {
 		query = query.Order("date_send DESC").Order("id DESC")
-	}	
+	}
 
 	if err := query.
 		Limit(o.PageSize).
 		Offset((o.Page - 1) * o.PageSize).
 		Find(&ss).Error; err != nil {
-		return []entity.ApiPinReport{}, 0, err
+		return []entity.ApiPinReportWithAlias{}, 0, totals, err
 	}
 
-	return ss, totalRows, nil
+	if aliases, err := r.GetOperatorAliases(); err == nil {
+		for i := range ss {
+			ss[i].OperatorAlias = ResolveOperatorAlias(ss[i].Operator, ss[i].Service, ss[i].Country, aliases)
+		}
+	}
+
+	if totalRows > 0 {
+		_ = t_query.Select(`
+			COALESCE(SUM(total_mo), 0),
+			COALESCE(SUM(total_postback), 0),
+			COALESCE(SUM(payout_adn * total_postback), 0),
+			COALESCE(SUM(payout_af * total_postback), 0),
+			COALESCE(CASE WHEN SUM(total_mo) > 0 THEN SUM(payout_af * total_postback) / SUM(total_mo) ELSE 0 END, 0),
+			COALESCE(SUM((payout_af * total_postback) - (payout_adn * total_postback)), 0)
+		`).Row().Scan(
+			&totals.TotalMO,
+			&totals.TotalPostback,
+			&totals.SBAF,
+			&totals.SAAF,
+			&totals.PricePerMO,
+			&totals.WakiRevenue,
+		)
+	}
+
+	return ss, totalRows, totals, nil
 }
 
 func (r *BaseModel) EditPayoutAPIReport(o entity.ApiPinReport) error {
@@ -1006,4 +1051,75 @@ func (r *BaseModel) GetOperatorAliases() ([]entity.OperatorAlias, error) {
 		Where("type = ?", "API").
 		Find(&res).Error
 	return res, err
+}
+
+func NormalizeCountry(country string) []string {
+	switch country {
+	case "SA", "KSA":
+		return []string{"SA", "KSA"}
+	case "LA", "LS":
+		return []string{"LA", "LS"}
+	case "LK", "LKA":
+		return []string{"LK", "LKA"}
+	case "PS", "PSE":
+		return []string{"PS", "PSE"}
+	case "SE", "SLE":
+		return []string{"SE", "SLE"}
+	case "NG", "NGA":
+		return []string{"NG", "NGA"}
+	case "CZ", "CZE":
+		return []string{"CZ", "CZE"}
+	case "OM", "OMN":
+		return []string{"OM", "OMN"}
+	default:
+		return []string{country}
+	}
+}
+
+func ResolveOperatorAlias(operator, service, country string, aliases []entity.OperatorAlias) string {
+	operator = strings.ToLower(strings.TrimSpace(operator))
+	service = strings.ToLower(strings.TrimSpace(service))
+	country = strings.ToLower(strings.TrimSpace(country))
+
+	countries := NormalizeCountry(country)
+	for i := range countries {
+		countries[i] = strings.ToLower(strings.TrimSpace(countries[i]))
+	}
+
+	for _, a := range aliases {
+		if strings.ToUpper(a.Type) != "API" {
+			continue
+		}
+		aliasOperator := strings.ToLower(strings.TrimSpace(a.Operator))
+		aliasService := strings.ToLower(strings.TrimSpace(a.Service))
+		aliasCountry := strings.ToLower(strings.TrimSpace(a.Country))
+		if aliasOperator == operator && aliasService != "" &&
+			strings.Contains(service, aliasService) &&
+			aliasSliceContains(countries, aliasCountry) {
+			return strings.ToLower(strings.TrimSpace(a.Alias))
+		}
+	}
+
+	for _, a := range aliases {
+		if strings.ToUpper(a.Type) != "API" {
+			continue
+		}
+		aliasOperator := strings.ToLower(strings.TrimSpace(a.Operator))
+		aliasCountry := strings.ToLower(strings.TrimSpace(a.Country))
+		if aliasOperator == operator && a.Service == "" &&
+			aliasSliceContains(countries, aliasCountry) {
+			return strings.ToLower(strings.TrimSpace(a.Alias))
+		}
+	}
+
+	return operator
+}
+
+func aliasSliceContains(slice []string, val string) bool {
+	for _, s := range slice {
+		if s == val {
+			return true
+		}
+	}
+	return false
 }

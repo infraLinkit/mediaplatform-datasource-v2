@@ -11,6 +11,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type ApiPinReportWithAlias struct {
+	ApiPinReport
+	OperatorAlias string `json:"operator_alias"`
+}
+
 type (
 	DisplayPinReport struct { // api report
 		ID          int       `form:"id" json:"id"`
@@ -125,6 +130,15 @@ type (
 		WakiRevenue        float64 `json:"waki_revenue"`
 		ECPA               float64 `json:"e_cpa"`
 		PricePerMO         float64 `json:"price_per_mo"`
+	}
+
+	TotalSummaryPinReport struct {
+		TotalMO       int     `json:"total_mo"`
+		TotalPostback int     `json:"total_postback"`
+		SBAF          float64 `json:"sbaf"`
+		SAAF          float64 `json:"saaf"`
+		PricePerMO    float64 `json:"price_per_mo"`
+		WakiRevenue   float64 `json:"waki_revenue"`
 	}
 
 	// CostReport is the data row returned by all cost report queries.
@@ -403,6 +417,10 @@ func (t *ApiPinReport) ValidateParams(Logs *logrus.Logger) ReturnResponse {
 	} else if t.Operator == "" {
 
 		return ReturnResponse{HttpStatus: fiber.StatusBadRequest, Rsp: GlobalResponse{Code: fiber.StatusBadRequest, Message: "Parameter Operator is mandatory"}}
+
+	} else if t.TotalPostback > t.TotalMO {
+
+		return ReturnResponse{HttpStatus: fiber.StatusBadRequest, Rsp: GlobalResponse{Code: fiber.StatusBadRequest, Message: "Parameter total_postback cannot be greater than total_mo"}}
 
 	} else {
 
