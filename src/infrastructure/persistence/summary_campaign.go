@@ -808,7 +808,7 @@ func (r *BaseModel) FormulaCPA(sum entity.SummaryCampaign) entity.SummaryCampaig
 	sum.AgencyFee, _ = strconv.ParseFloat(strings.TrimSpace(gs.AgencyFee), 64)
 	sum.AgencyFee = sum.AgencyFee / 100
 	mo_received := float64(sum.MoReceived)
-	sum.TotalWakiAgencyFee = (sum.CostPerConversion * mo_received) + (sum.AgencyFee * (sum.CostPerConversion + (sum.CostPerConversion * mo_received)))
+	sum.TotalWakiAgencyFee = (sum.CostPerConversion * mo_received) + (sum.AgencyFee * (sum.SBAF + (sum.CostPerConversion * mo_received)))
 
 	// GET SAAF (spending after agency fee)
 	//saaf := total_waki_agency_fee + sbaf
@@ -821,6 +821,10 @@ func (r *BaseModel) FormulaCPA(sum entity.SummaryCampaign) entity.SummaryCampaig
 	sum.SAAF = sum.TotalWakiAgencyFee + sum.SBAF + sum.TechnicalFee //saaf
 	if strings.ToLower(sum.ClientType) == "external" {
 		sum.SAAF = mo_received * sum.POAF
+	}
+
+	if strings.Contains(strings.ToUpper(sum.CampaignObjective), "MAINSTREAM") {
+		sum.SAAF = mo_sent * sum.POAF
 	}
 
 	// GET eCPA
