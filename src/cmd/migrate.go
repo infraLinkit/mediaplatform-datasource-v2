@@ -28,7 +28,7 @@ var migrateEntities = []interface{}{
 	&entity.IPRangeCsvRow{}, &entity.IPRange{}, &entity.IncSummaryCampaign{},
 	&entity.IncSummaryCampaignHour{}, &entity.SummaryTraffic{}, &entity.BudgetIO{},
 	&entity.SummaryBudgetIO{}, &entity.UserCompany{}, &entity.DomainService{},
-	&entity.HistoryCappingKey{}, &entity.OperatorAlias{},
+	&entity.HistoryCappingKey{}, &entity.OperatorAlias{}, &entity.CampaignROASCohort{},
 }
 
 var migrateCmd = &cobra.Command{
