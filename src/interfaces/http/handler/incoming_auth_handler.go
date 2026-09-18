@@ -197,5 +197,24 @@ func (h *IncomingHandler) AuthMiddleware(c *fiber.Ctx) error {
 
 	c.Locals("agencies", agencyNames)
 
+	var countries []entity.Country
+	err = h.DB.Raw(`
+		SELECT DISTINCT c.code
+		FROM detail_users du
+		JOIN countries c ON du.country_id = c.id
+		WHERE du.user_id = ? AND du.status = true
+	`, userID).Scan(&countries).Error
+	if err != nil {
+		h.Logs.WithError(err).Errorf("AuthMiddleware: Database error fetching countries for user %d", userID)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
+	}
+
+	var countryCodes []string
+	for _, ctr := range countries {
+		countryCodes = append(countryCodes, ctr.Code)
+	}
+
+	c.Locals("countries", countryCodes)
+
 	return c.Next()
 }
