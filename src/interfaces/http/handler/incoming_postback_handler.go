@@ -390,6 +390,15 @@ func (h *IncomingHandler) PostbackV3(c *fiber.Ctx) error {
 						ReasonStatusBillable: p.StatusDetail,
 					}
 
+					// delay postback: if pxdate is a past date, use it for partitioned table lookup
+					isPastDate := false
+					if p.Pxdate != "" {
+						if t, err := time.Parse("20060102", p.Pxdate); err == nil && t.Format("20060102") != time.Now().Format("20060102") {
+							pxData.Pxdate = t
+							isPastDate = true
+						}
+					}
+
 					switch p.Method {
 					case "ADNETCODE":
 
@@ -416,7 +425,11 @@ func (h *IncomingHandler) PostbackV3(c *fiber.Ctx) error {
 						}
 
 						if !breaking { */
-						px, isPX = h.DS.GetByAdnetCode(pxData)
+						if isPastDate {
+							px, isPX = h.DS.GetByAdnetCodeByDate(pxData, p.Pxdate)
+						} else {
+							px, isPX = h.DS.GetByAdnetCode(pxData)
+						}
 
 						/* if !isPX {
 								return c.Status(fiber.StatusNotFound).JSON(
@@ -429,9 +442,17 @@ func (h *IncomingHandler) PostbackV3(c *fiber.Ctx) error {
 						} */
 
 					case "TOKEN":
-						px, isPX = h.DS.GetToken(pxData)
+						if isPastDate {
+							px, isPX = h.DS.GetTokenByDate(pxData, p.Pxdate)
+						} else {
+							px, isPX = h.DS.GetToken(pxData)
+						}
 					case "JSON-MSISDN", "XML-MSISDN", "HTML-MSISDN":
-						px, isPX = h.DS.GetPxByMsisdn(pxData)
+						if isPastDate {
+							px, isPX = h.DS.GetPxByMsisdnByDate(pxData, p.Pxdate)
+						} else {
+							px, isPX = h.DS.GetPxByMsisdn(pxData)
+						}
 					case "PIXEL":
 						if g := h.RCP.Get(p.AffSub); g.Val() != "" {
 
@@ -446,13 +467,37 @@ func (h *IncomingHandler) PostbackV3(c *fiber.Ctx) error {
 
 						} else {
 
-							switch dc.Partner {
-							case "ID-XLSMART-LINKIT":
-								px, isPX = h.DS.SpecialGetPx(pxData, h.Config.StartGetIntervalDatePXS, h.Config.EndGetIntervalDatePXS)
-							default:
-								px, isPX = h.DS.GetPx(pxData)
+							if isPastDate {
+								px, isPX = h.DS.GetPxByDate(pxData, p.Pxdate)
+							} else {
+								switch dc.Partner {
+								case "ID-XLSMART-LINKIT":
+									px, isPX = h.DS.SpecialGetPx(pxData, h.Config.StartGetIntervalDatePXS, h.Config.EndGetIntervalDatePXS)
+								default:
+									px, isPX = h.DS.GetPx(pxData)
+								}
 							}
 
+						}
+					case "TRF":
+						if g := h.RCP.Get(p.AffSub); g.Val() != "" {
+
+							isPX = true
+
+							if err = json.Unmarshal([]byte(g.Val()), &px); err != nil {
+
+								return c.Status(fiber.StatusNotAcceptable).JSON(entity.GlobalResponse{Code: fiber.StatusNotAcceptable, Message: "Invalid pixel format or this pixel not found, pixel : " + p.AffSub})
+							}
+
+							h.RCP.Del(p.AffSub)
+
+						} else {
+
+							if isPastDate {
+								px, isPX = h.DS.GetPxByDateFallbackNotUnique(pxData, p.Pxdate)
+							} else {
+								px, isPX = h.DS.GetPxFallbackNotUnique(pxData)
+							}
 						}
 					case "SPC-MVLS", "SPC-TFCS", "SPC":
 
@@ -581,6 +626,9 @@ func (h *IncomingHandler) PostbackV3(c *fiber.Ctx) error {
 								bodyReq, _ := json.Marshal(px)
 
 								corId := "RTO" + external.GetUniqId(h.Config.TZ)
+								if isPastDate {
+									corId = corId + "_" + p.Pxdate
+								}
 
 								pubCtx3, pubCancel3 := context.WithTimeout(c.UserContext(), time.Duration(h.Config.RabbitMQCtxTimeout)*time.Second)
 								defer pubCancel3()
@@ -686,8 +734,24 @@ func (h *IncomingHandler) PostbackBilled(c *fiber.Ctx) error {
 		MStatusCharge: strings.TrimSpace(strings.ToLower(p.Status)) == "success",
 	}
 
-	if err := h.DS.UpdatePixelBilled(pixelStorage); err != nil {
+	if err := h.DS.UpdatePixelBilled(pixelStorage, p.Pxdate); err != nil {
 		h.Logs.Error(fmt.Sprintf("failed update pixel billed: %#v", err))
+	}
+
+	// trigger re-summary billing for past date delay postback
+	// filtering by objective/whitelist handled inside SummaryCampaignBillingH1
+	if p.Pxdate != "" {
+		if t, err := time.Parse("20060102", p.Pxdate); err == nil && t.Format("20060102") != time.Now().Format("20060102") {
+			resyncPayload, _ := json.Marshal(map[string]string{
+				"px_date":     p.Pxdate,
+				"pixel_table": "pixel_storages_" + p.Pxdate,
+			})
+			pubCtxBilling, pubCancelBilling := context.WithTimeout(c.UserContext(), time.Duration(h.Config.RabbitMQCtxTimeout)*time.Second)
+			defer pubCancelBilling()
+			if err := h.RM.PublishWithRetry(pubCtxBilling, "E_SUMMARYCAMPAIGNBILLING", "Q_SUMMARYCAMPAIGNBILLING", resyncPayload, "RESYNC_BILLING"); err != nil {
+				h.Logs.Debug(fmt.Sprintf("[x] Failed published RESYNC_BILLING: %v", err))
+			}
+		}
 	}
 
 	h.DS.UpdateGoogleSheetPixel(

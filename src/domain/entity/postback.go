@@ -21,6 +21,7 @@ type (
 		StatusCode    string `json:"statuscode"`
 		StatusDetail  string `json:"statusdetail"`
 		Desc          string `json:"desc"`
+		Pxdate        string `json:"pxdate"`
 	}
 
 	PostbackData struct {
@@ -82,6 +83,7 @@ func NewDataPostbackV2(c *fiber.Ctx) *PostbackReceive {
 		StatusCode:   m["statuscode"],
 		StatusDetail: m["statusdetail"],
 		Desc:         m["desc"],
+		Pxdate:       m["pxdate"],
 	}
 }
 
