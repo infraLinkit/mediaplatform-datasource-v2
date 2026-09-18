@@ -56,7 +56,6 @@ func (r *BaseModel) GetTargetBudget(country string, startDate time.Time, endDate
 			if err != nil {
 				fmt.Println("ERROR REPORTED::", err)
 			}
-			fmt.Println("COUTRY:: ", s.Country)
 			ss = append(ss, s)
 		}
 
@@ -149,7 +148,6 @@ func (r *BaseModel) GetTargetBudgetList(country string, startDate time.Time, end
 		return ss, false
 	}
 
-	fmt.Println(ss)
 	return ss, true
 
 }
