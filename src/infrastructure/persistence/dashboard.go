@@ -49,23 +49,23 @@ func (r *BaseModel) CreateSummaryDashboard(s entity.SummaryCampaign) error {
 		company,
 		SUM(mo_received) as total_mo,
 		SUM(postback) as total_postback,
-		SUM(CASE WHEN campaign_objective='CPA' THEN mo_received ELSE 0 END) as total_cpa_mo,
+		SUM(CASE WHEN campaign_objective IN ('CPA','SINGLE URL S2S') THEN mo_received ELSE 0 END) as total_cpa_mo,
 		SUM(CASE WHEN campaign_objective='UPLOAD SMS' THEN mo_received ELSE 0 END) as total_sms_mo,
-		SUM(CASE WHEN campaign_objective='MAINSTREAM' THEN mo_received ELSE 0 END) as total_mainstream_mo,
+		SUM(CASE WHEN campaign_objective IN('MAINSTREAM', 'SINGLE URL MAINSTREAM') THEN mo_received ELSE 0 END) as total_mainstream_mo,
 
-		SUM(CASE WHEN campaign_objective='CPA' THEN postback ELSE 0 END) as total_cpa_postback,
+		SUM(CASE WHEN campaign_objective IN ('CPA','SINGLE URL S2S') THEN postback ELSE 0 END) as total_cpa_postback,
 		SUM(CASE WHEN campaign_objective='UPLOAD SMS' THEN postback ELSE 0 END) as total_sms_postback,
-		SUM(CASE WHEN campaign_objective='MAINSTREAM' THEN postback ELSE 0 END) as total_mainstream_postback,
+		SUM(CASE WHEN campaign_objective IN('MAINSTREAM', 'SINGLE URL MAINSTREAM') THEN postback ELSE 0 END) as total_mainstream_postback,
 
-		SUM(sbaf) as total_spending,
-		SUM(CASE WHEN campaign_objective='CPA' THEN sbaf ELSE 0 END) as total_cpa_spending,
-		SUM(CASE WHEN campaign_objective='UPLOAD SMS' THEN sbaf ELSE 0 END) as total_sms_spending,
-		SUM(CASE WHEN campaign_objective='MAINSTREAM' THEN sbaf ELSE 0 END) as total_mainstream_spending,
+		SUM(saaf) as total_spending,
+		SUM(CASE WHEN campaign_objective IN ('CPA','SINGLE URL S2S') THEN saaf ELSE 0 END) as total_cpa_spending,
+		SUM(CASE WHEN campaign_objective='UPLOAD SMS' THEN saaf ELSE 0 END) as total_sms_spending,
+		SUM(CASE WHEN campaign_objective IN('MAINSTREAM', 'SINGLE URL MAINSTREAM') THEN saaf ELSE 0 END) as total_mainstream_spending,
 
 		SUM(saaf) as total_saaf,
-		SUM(CASE WHEN campaign_objective='CPA' THEN saaf ELSE 0 END) as total_cpa_saaf,
+		SUM(CASE WHEN campaign_objective IN ('CPA','SINGLE URL S2S') THEN saaf ELSE 0 END) as total_cpa_saaf,
 		SUM(CASE WHEN campaign_objective='UPLOAD SMS' THEN saaf ELSE 0 END) as total_sms_saaf,
-		SUM(CASE WHEN campaign_objective='MAINSTREAM' THEN saaf ELSE 0 END) as total_mainstream_saaf,
+		SUM(CASE WHEN campaign_objective IN('MAINSTREAM', 'SINGLE URL MAINSTREAM') THEN saaf ELSE 0 END) as total_mainstream_saaf,
 		NOW() FROM summary_campaigns WHERE 
 		DATE(summary_date) = DATE(?) AND  
 		adnet = ? AND 
