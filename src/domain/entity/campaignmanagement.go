@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"time"
+
 	"github.com/lib/pq"
 )
 
@@ -18,24 +20,27 @@ type (
 		Page         int    `form:"page" json:"page"`
 		Draw         int    `form:"draw" json:"draw"`
 		Action       string `form:"action" json:"action"`
-		URLServiceKey string `form:"url_service_key" json:"url_service_key"`
-		OrderColumn   string `form:"order_column" json:"order_column"`
-		OrderDir      string `form:"order_dir" json:"order_dir"`
+		URLServiceKey     string `form:"url_service_key" json:"url_service_key"`
+		OrderColumn       string `form:"order_column" json:"order_column"`
+		OrderDir          string `form:"order_dir" json:"order_dir"`
+		CreatedDateBefore string `form:"created_date_before" json:"created_date_before"`
+		CreatedDateAfter  string `form:"created_date_after" json:"created_date_after"`
 	}
 
 	CampaignManagementData struct {
 		ID                pq.Int64Array  `gorm:"type:bigint[]" json:"id"`
-		CampaignID        string `json:"campaign_id"`
-		CampaignName      string `json:"campaign_name"`
-		CampaignObjective string `json:"campaign_objective"`
-		Country           string `json:"country"`
-		Partner           string `json:"partner"`
-		TotalOperator     int    `json:"total_operator"`
-		Service           int 	 `json:"service"`
-		TotalAdnet        int    `json:"total_adnet"`
-		ShortCode         int 	 `json:"short_code"`
-		IsActive          bool   `json:"is_active"`
+		CampaignID        string         `json:"campaign_id"`
+		CampaignName      string         `json:"campaign_name"`
+		CampaignObjective string         `json:"campaign_objective"`
+		Country           string         `json:"country"`
+		Partner           string         `json:"partner"`
+		TotalOperator     int            `json:"total_operator"`
+		Service           int            `json:"service"`
+		TotalAdnet        int            `json:"total_adnet"`
+		ShortCode         int            `json:"short_code"`
+		IsActive          bool           `json:"is_active"`
 		URLServiceKey     pq.StringArray `gorm:"type:text[]" json:"url_service_key"`
+		CreatedAt         time.Time      `json:"created_at"`
 	}
 
 	CampaignManagementDetail struct {
@@ -65,6 +70,7 @@ type (
 		Channel           string         `json:"channel"`
 		CCEmail           pq.StringArray `json:"cc_email"`
 		IsBillable        bool           `json:"is_billable"`
+		CreatedAt         time.Time      `json:"created_at"`
 	}
 
 	CampaignManagementDataDetail struct {

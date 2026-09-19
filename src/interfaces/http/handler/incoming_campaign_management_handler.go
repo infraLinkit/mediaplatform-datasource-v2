@@ -40,6 +40,8 @@ func (h *IncomingHandler) DisplayCampaignManagement(c *fiber.Ctx) error {
 		URLServiceKey: m["url_service_key"],
 		OrderColumn:   m["order_column"],
 		OrderDir:      m["order_dir"],
+		CreatedDateBefore: m["created_date_before"],
+		CreatedDateAfter:  m["created_date_after"],
 	}
 
 	v := c.Params("v")

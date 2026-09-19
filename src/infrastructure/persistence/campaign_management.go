@@ -32,6 +32,7 @@ func (r *BaseModel) GetCampaignManagement(o entity.DisplayCampaignManagement) ([
             campaigns.campaign_id,
             campaigns.name AS campaign_name,
             campaigns.campaign_objective,
+            campaigns.created_at,
             agg.country,
             agg.partner,
             agg.total_operator,
@@ -76,6 +77,9 @@ func (r *BaseModel) GetCampaignManagement(o entity.DisplayCampaignManagement) ([
         }
         if o.URLServiceKey != "" {
             query = query.Where("EXISTS (SELECT 1 FROM campaign_details cd WHERE cd.campaign_id = agg.campaign_id AND cd.url_service_key ILIKE ?)", "%"+o.URLServiceKey+"%")
+        }
+        if o.CreatedDateBefore != "" && o.CreatedDateAfter != "" {
+            query = query.Where("campaigns.created_at BETWEEN ? AND ?", o.CreatedDateBefore, o.CreatedDateAfter)
         }
     }
 
@@ -157,7 +161,8 @@ func (r *BaseModel) GetCampaignManagementDetail(o entity.DisplayCampaignManageme
 		campaign_details.channel,
 		campaign_details.url_type,
 		campaign_details.device_type,
-		campaign_details.is_billable`
+		campaign_details.is_billable,
+		campaigns.created_at`
 
 	// Add cc_email only if campaign objective is not MAINSTREAM
 	if !strings.Contains(campaignObjective, "MAINSTREAM") {
@@ -199,7 +204,7 @@ func (r *BaseModel) GetCampaignManagementDetail(o entity.DisplayCampaignManageme
 			&detail.Partner, &detail.Adnet, &detail.ShortCode, &detail.MOLimit, &detail.Payout,
 			&detail.RatioSend, &detail.RatioReceive, &detail.URLPostback, &detail.URLService,
 			&detail.URLanding, &detail.URLWarpLanding, &detail.APIURL, &detail.IsActive, &detail.UrlServiceKey, &detail.Channel, &detail.URLType,
-			&detail.DeviceType, &detail.IsBillable, &ccEmail,
+			&detail.DeviceType, &detail.IsBillable, &detail.CreatedAt, &ccEmail,
 		}
 
 		if err := rows.Scan(scanArgs...); err != nil {
