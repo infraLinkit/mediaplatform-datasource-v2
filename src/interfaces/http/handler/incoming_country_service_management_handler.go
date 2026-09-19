@@ -719,6 +719,118 @@ func (h *IncomingHandler) DisplayOperator(c *fiber.Ctx) error {
 	return c.Status(r.HttpStatus).JSON(r.Rsp)
 }
 
+func (h *IncomingHandler) CreateOperatorAlias(c *fiber.Ctx) error {
+	c.Set("Content-Type", "application/x-www-form-urlencoded")
+	c.Accepts("application/x-www-form-urlencoded")
+	c.AcceptsCharsets("utf-8", "iso-8859-1")
+
+	var alias entity.OperatorAlias
+
+	if errForm := c.BodyParser(&alias); errForm != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid request body",
+		})
+	}
+
+	if errCreate := h.DS.CreateOperatorAlias(&alias); errCreate != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to create operator alias",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(entity.GlobalResponse{Code: fiber.StatusOK, Message: config.OK_DESC})
+}
+
+func (h *IncomingHandler) UpdateOperatorAlias(c *fiber.Ctx) error {
+	id, _ := strconv.Atoi(c.Params("id"))
+	var alias entity.OperatorAlias
+
+	if formErr := c.BodyParser(&alias); formErr != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid request body",
+			"error":   formErr.Error(),
+		})
+	}
+
+	alias.ID = uint(id)
+
+	if err := h.DS.UpdateOperatorAlias(&alias); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to update operator alias",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(entity.GlobalResponse{Code: fiber.StatusOK, Message: config.OK_DESC})
+}
+
+func (h *IncomingHandler) DeleteOperatorAlias(c *fiber.Ctx) error {
+	id, _ := strconv.Atoi(c.Params("id"))
+	if err := h.DS.DeleteOperatorAlias(uint(id)); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to delete operator alias",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(entity.GlobalResponse{Code: fiber.StatusOK, Message: config.OK_DESC})
+}
+
+func (h *IncomingHandler) DisplayOperatorAlias(c *fiber.Ctx) error {
+
+	c.Set("Content-Type", "application/x-www-form-urlencoded")
+	c.Accepts("application/x-www-form-urlencoded")
+	c.AcceptsCharsets("utf-8", "iso-8859-1")
+
+	m := c.Queries()
+
+	page, _ := strconv.Atoi(m["page"])
+	pageSize, errRequest := strconv.Atoi(m["page_size"])
+	if errRequest != nil {
+		pageSize = 10
+	}
+	draw, _ := strconv.Atoi(m["draw"])
+	fe := entity.GlobalRequestFromDataTable{
+		Page:     page,
+		Action:   m["action"],
+		Draw:     draw,
+		PageSize: pageSize,
+		Search:   m["search[value]"],
+	}
+
+	var (
+		errResponse error
+		total_data  int64
+		alias_list  []entity.OperatorAlias
+	)
+
+	alias_list, total_data, errResponse = h.DS.GetOperatorAliasList(fe)
+
+	r := entity.ReturnResponse{
+		HttpStatus: fiber.StatusNotFound,
+		Rsp: entity.GlobalResponse{
+			Code:    fiber.StatusNotFound,
+			Message: "empty",
+		},
+	}
+
+	if errResponse == nil {
+
+		r = entity.ReturnResponse{
+			HttpStatus: fiber.StatusOK,
+			Rsp: entity.GlobalResponseWithDataTable{
+				Code:            fiber.StatusOK,
+				Message:         config.OK_DESC,
+				Data:            alias_list,
+				Draw:            fe.Draw,
+				RecordsTotal:    int(total_data),
+				RecordsFiltered: int(total_data),
+			},
+		}
+
+	}
+
+	return c.Status(r.HttpStatus).JSON(r.Rsp)
+}
+
 func (h *IncomingHandler) CreatePartner(c *fiber.Ctx) error {
 	c.Set("Content-Type", "application/x-www-form-urlencoded")
 	c.Accepts("application/x-www-form-urlencoded")

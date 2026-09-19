@@ -122,6 +122,10 @@ func registerCountryService(grp fiber.Router, h *handler.IncomingHandler) {
 	grp.Put("/operator/:id", h.UpdateOperator).Name("Update Operator")
 	grp.Delete("/operator/:id", h.DeleteOperator).Name("Delete Operator")
 	grp.Get("/api-operator-list", h.DisplayAPIOperatorList).Name("Show API Operator List")
+	grp.Get("/operator-alias", h.DisplayOperatorAlias).Name("Display Operator Alias")
+	grp.Post("/operator-alias", h.CreateOperatorAlias).Name("Create Operator Alias")
+	grp.Put("/operator-alias/:id", h.UpdateOperatorAlias).Name("Update Operator Alias")
+	grp.Delete("/operator-alias/:id", h.DeleteOperatorAlias).Name("Delete Operator Alias")
 	// Partner
 	grp.Get("/partner", h.DisplayPartner).Name("Create Partner")
 	grp.Post("/partner", h.CreatePartner).Name("Create Partner")
