@@ -13,6 +13,7 @@ func RegisterInternal(grp fiber.Router, h *handler.IncomingHandler) {
 	grp.Put("/updateagencycost/:v", h.UpdateAgencyCost).Name("Update Agency fee and cost per conversion in db")
 	grp.Put("/updatestatusalert/:v", h.UpdateStatusAlert).Name("Update Status Alert in db")
 	grp.Get("/datasentapipinreport/", h.TrxPinReport).Name("Receive Pin Report Transactional")
+	grp.Get("/uploadsmsapipinreport/", h.TrxUploadSmsApiPinReport).Name("Receive Upload SMS API Pin Report (requires existing campaign)")
 	grp.Post("/pinreport/editpayout", h.EditPayoutAPIReport).Name("Edit payout api report")
 	grp.Get("/datasentapiperformance/", h.TrxPerformancePinReport).Name("Receive Pin API Performance Report Transactional")
 	grp.Post("/pinperformance/editcpa", h.EditCpaAPIPerformanceReport).Name("Edit cpa api performance report")

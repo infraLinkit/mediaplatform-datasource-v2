@@ -19,6 +19,26 @@ func (r *BaseModel) GetLastCampaignId(tbl string) int {
 	return result
 }
 
+// GetCampaignDetailByURLServiceKeyAndObjective looks up a campaign_details
+// row by url_service_key, requiring the parent campaign's objective to
+// match. Used by ingest endpoints that must reject data for campaigns that
+// were not created upfront, instead of auto-creating a duplicate campaign.
+func (r *BaseModel) GetCampaignDetailByURLServiceKeyAndObjective(urlServiceKey, objective string) (entity.CampaignDetail, bool) {
+
+	var cd entity.CampaignDetail
+
+	result := r.DB.Table("campaign_details").
+		Joins("JOIN campaigns ON campaigns.campaign_id = campaign_details.campaign_id").
+		Where("campaign_details.url_service_key = ? AND campaigns.campaign_objective = ?", urlServiceKey, objective).
+		First(&cd)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return cd, false
+	}
+
+	return cd, true
+}
+
 func (r *BaseModel) GetCampaignByCampaignId(o entity.Campaign) (entity.Campaign, bool) {
 
 	result := r.DB.Model(&o).

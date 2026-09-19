@@ -141,6 +141,47 @@ func (h *IncomingHandler) UpdateAgencyFeeAndCostConversion(c *fiber.Ctx) error {
 	}
 }
 
+// TrxUploadSmsApiPinReport ingests pin report data for the "UPLOAD SMS API"
+// campaign objective. Unlike TrxPinReport (which publishes to RabbitMQ and
+// lets the core-worker consumer auto-create a campaign when none matches),
+// this endpoint requires the campaign to already exist for the given
+// url_service_key (sent as campaign_id) under the "UPLOAD SMS API"
+// objective, and rejects the request otherwise. On success it writes
+// directly and synchronously to api_pin_reports.
+func (h *IncomingHandler) TrxUploadSmsApiPinReport(c *fiber.Ctx) error {
+
+	c.Set("Content-Type", "application/x-www-form-urlencoded")
+	c.Accepts("application/x-www-form-urlencoded")
+	c.AcceptsCharsets("utf-8", "iso-8859-1")
+
+	pin := entity.NewInstanceTrxPinReport(c, h.Config)
+
+	if r := pin.ValidateParams(h.Logs); r.HttpStatus != fiber.StatusOK {
+		return c.Status(r.HttpStatus).JSON(r.Rsp)
+	}
+
+	if pin.CampaignId == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(entity.GlobalResponse{
+			Code:    fiber.StatusBadRequest,
+			Message: "Parameter campaign_id is mandatory",
+		})
+	}
+
+	if _, found := h.DS.GetCampaignDetailByURLServiceKeyAndObjective(pin.CampaignId, "UPLOAD SMS API"); !found {
+		return c.Status(fiber.StatusNotFound).JSON(entity.GlobalResponse{
+			Code:    fiber.StatusNotFound,
+			Message: fmt.Sprintf("Campaign ID (%s) not found for objective UPLOAD SMS API. Please create the campaign first.", pin.CampaignId),
+		})
+	}
+
+	h.DS.PinReport(*pin)
+
+	return c.Status(fiber.StatusOK).JSON(entity.GlobalResponse{
+		Code:    fiber.StatusOK,
+		Message: config.OK_DESC,
+	})
+}
+
 func (h *IncomingHandler) TrxPinReport(c *fiber.Ctx) error {
 
 	c.Set("Content-Type", "application/x-www-form-urlencoded")
