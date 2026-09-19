@@ -112,6 +112,7 @@ type (
 		OrderColumn       string    `form:"order_column" json:"order_column"`
 		OrderDir          string    `form:"order_dir" json:"order_dir"`
 		CampaignObjective string    `form:"order_dir" json:"campaign_objective"`
+		ShowLanding       bool      `form:"show_landing" json:"show_landing"`
 	}
 
 	TotalSummaryCampaign struct {

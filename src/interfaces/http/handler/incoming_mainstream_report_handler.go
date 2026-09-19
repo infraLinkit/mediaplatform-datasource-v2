@@ -58,6 +58,7 @@ func (h *IncomingHandler) DisplayMainstreamReport(c *fiber.Ctx) error {
 		Reload:        m["reload"],
 		OrderColumn:   m["order_column"],
 		OrderDir:      m["order_dir"],
+		ShowLanding:   m["show_landing"] == "true",
 	}
 
 	allowedCompanies, _ := c.Locals("companies").([]string)

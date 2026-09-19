@@ -481,6 +481,7 @@ func (h *IncomingHandler) DisplayCPAReport(c *fiber.Ctx) error {
 		OrderColumn:       m["order_column"],
 		OrderDir:          m["order_dir"],
 		CampaignObjective: m["campaign_objective"],
+		ShowLanding:       m["show_landing"] == "true",
 	}
 
 	allowedCompanies, _ := c.Locals("companies").([]string)

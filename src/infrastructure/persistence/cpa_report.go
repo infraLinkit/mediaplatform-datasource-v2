@@ -16,6 +16,11 @@ func (r *BaseModel) GetDisplayCPAReport(o entity.DisplayCPAReport, allowedCompan
 	var total_rows int64
 	var TotalSummaryCampaign entity.TotalSummaryCampaign
 
+	moCondition := "(mo_received > 0 OR saaf > 0)"
+	if o.ShowLanding {
+		moCondition = "(mo_received > 0 OR saaf > 0 OR landing > 0)"
+	}
+
 	t_query := r.DB.Model(&entity.SummaryCampaign{})
 	//fmt.Println("Company: ", o.Company)
 	query := r.DB.Model(&entity.SummaryCampaign{}).Select(`
@@ -23,8 +28,8 @@ func (r *BaseModel) GetDisplayCPAReport(o entity.DisplayCPAReport, allowedCompan
 		saaf,
 		sbaf,
 		revenue
-	`).Where("(mo_received > 0 OR saaf > 0)").Where("company IN ?", allowedCompanies).Where("adnet IN ?", allowedAdnets)
-	t_query.Where("(mo_received > 0 OR saaf > 0)").Where("company IN ?", allowedCompanies).Where("adnet IN ?", allowedAdnets)
+	`).Where(moCondition).Where("company IN ?", allowedCompanies).Where("adnet IN ?", allowedAdnets)
+	t_query.Where(moCondition).Where("company IN ?", allowedCompanies).Where("adnet IN ?", allowedAdnets)
 
 	if o.CampaignObjective != "" {
 		query.Where("campaign_objective = ? ", o.CampaignObjective)
@@ -322,8 +327,13 @@ func (r *BaseModel) GetDisplayMainstreamReport(o entity.DisplayCPAReport, allowe
 	/*
 
 	 */
+	moCondition := "(mo_received > 0 OR saaf > 0)"
+	if o.ShowLanding {
+		moCondition = "(mo_received > 0 OR saaf > 0 OR landing > 0)"
+	}
+
 	t_query := r.DB.Model(&entity.SummaryCampaign{}).Where("campaign_objective LIKE ?", "%MAINSTREAM%").
-		Where("(mo_received > 0 OR saaf > 0)").
+		Where(moCondition).
 		Where("company IN ?", allowedCompanies).
 		Where("adnet IN ?", allowedAgencies)
 
@@ -334,7 +344,7 @@ func (r *BaseModel) GetDisplayMainstreamReport(o entity.DisplayCPAReport, allowe
 		price_per_mo,
 		revenue
 	`).Where("campaign_objective LIKE ?", "%MAINSTREAM%").
-		Where("(mo_received > 0 OR saaf > 0)").
+		Where(moCondition).
 		Where("company IN ?", allowedCompanies).
 		Where("adnet IN ?", allowedAgencies)
 
