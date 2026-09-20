@@ -97,6 +97,8 @@ type (
 		APIARPU                                string
 		ARPUUsername                           string
 		ARPUPassword                           string
+		MartAPIBaseURL                         string
+		MartAPIKey                             string
 		APILINKITDashboard                     string
 		SendToLinkitDashboard                  bool
 		GetDataArpu                            bool
@@ -222,6 +224,8 @@ func InitCfg() *Cfg {
 		APIARPU:                                os.Getenv("APIARPU"),
 		ARPUUsername:                           os.Getenv("ARPUUsername"),
 		ARPUPassword:                           os.Getenv("ARPUPassword"),
+		MartAPIBaseURL:                         os.Getenv("MART_API_BASE_URL"),
+		MartAPIKey:                             os.Getenv("MART_API_KEY"),
 		APILINKITDashboard:                     os.Getenv("APILINKITDashboard"),
 		SendToLinkitDashboard:                  send_to_linkit_dashboard,
 		GetDataArpu:                            get_data_arpu,
