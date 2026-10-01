@@ -135,30 +135,6 @@ func (h *BaseModel) SetCounterData(key string, path string, val string) {
 
 }
 
-func (h *BaseModel) IndexRedis(key string, field string) {
-
-	h.R.Conn().B().FtCreate().Index(key).Prefix(1)
-
-	//`$.campaign_id AS campaign_id TEXT $.pixel AS pixel TEXT $.user_agent AS user_agent TEXT $.os AS os TEXT $.browser AS browser TEXT $.ips AS ips TEXT $.user_is_rejected AS user_is_rejected TAG $.user_is_duplicated AS user_is_duplicated TAG $.refferal_url AS refferal_url TEXT $.handset_code AS handset_code TEXT $.handset_type AS handset_type TEXT $.pixel_is_used AS pixel_is_used TAG`
-
-	//Create Indexing key
-	result := h.R.Conn().Do(context.Background(), h.R.Conn().B().FtCreate().Index(key).OnJson().Schema().FieldName(field).Text().Build())
-	isIdxCreated, err := result.AsBool()
-
-	if err != nil {
-		h.Logs.Info(fmt.Sprintf("[v] Created FT idx key ( %s ) : %t, %#v...\n\r", key, isIdxCreated, result))
-	} else {
-
-		if !isIdxCreated {
-			h.Logs.Info(fmt.Sprintf("[x] Failed created FT idx key ( %s ) : %#v...\n\r", key, isIdxCreated))
-		} else {
-			h.Logs.Info(fmt.Sprintf("[v] Success created FT idx key ( %s ) : %t, %#v...\n\r", key, isIdxCreated, result))
-		}
-
-	}
-
-}
-
 func (h *BaseModel) GetData(i []interface{}, key string, path string) []interface{} {
 
 	// Get Config Data Landing

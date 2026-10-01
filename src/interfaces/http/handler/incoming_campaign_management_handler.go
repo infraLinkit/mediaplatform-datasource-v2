@@ -593,22 +593,13 @@ func (h *IncomingHandler) DelCampaign(c *fiber.Ctx) error {
 		cfgCmp, _ := h.DS.GetDataConfig(cfgRediskey, "$")
 		h.DS.DelData(cfgRediskey, "$")
 
-		// DROP Index redis
-		h.DS.R.Conn().B().FtDropindex().Index(cfgRediskey).Build()
-
 		ctrRedisKey := external.Concat("-", o.URLServiceKey, "counterIdx")
 
 		h.DS.DelData(ctrRedisKey, "$")
 
-		// DROP Index redis
-		h.DS.R.Conn().B().FtDropindex().Index(ctrRedisKey).Build()
-
 		sumRedisKey := external.Concat("-", o.URLServiceKey, "summary")
 
 		h.DS.DelData(sumRedisKey, "$")
-
-		// DROP Index redis
-		h.DS.R.Conn().B().FtDropindex().Index(sumRedisKey).Build()
 
 		h.DS.DelCampaignDetail(entity.CampaignDetail{
 			URLServiceKey: o.URLServiceKey,
@@ -1427,8 +1418,6 @@ func (h *IncomingHandler) UpdateCampaign(c *fiber.Ctx) error {
 
 			dataConfig.Id = campaign_detail_id
 			cfgDataConfig, _ := json.Marshal(dataConfig)
-
-			h.DS.IndexRedis(cfgRediskey, "$.id AS id NUMERIC $.urlservicekey AS urlservicekey TEXT $.campaign_id AS campaign_id TEXT $.name AS name TEXT $.objective AS objective TEXT $.country AS country TEXT $.advertiser AS advertiser TEXT $.operator AS operator TEXT $.partner AS partner TEXT $.aggregator AS aggregator TEXT $.adnet AS adnet TEXT $.service AS service TEXT $.keyword AS keyword TEXT $.subkeyword AS subkeyword TEXT $.is_billable AS is_billable TAG $.plan AS plan TEXT $.pubid AS pubid TEXT $.short_code AS short_code TEXT $.device_type AS device_type TEXT $.os AS os TEXT $.url_type AS url_type TEXT $.click_type AS click_type NUMERIC $.click_delay AS click_delay NUMERIC $.client_type AS client_type TEXT $.traffic_source AS traffic_source TAG $.unique_click AS unique_click TAG $.url_banner AS url_banner TEXT $.url_banner_original AS url_banner_original TEXT $.url_landing AS url_landing TEXT $.url_warp_landing AS url_warp_landing TEXT $.url_service AS url_service TEXT $.url_tfc_or_smartlink AS url_tfc_or_smartlink TEXT $.custom_integration AS custom_integration TEXT $.ip_address AS ip_address TEXT $.is_active AS is_active TAG $.mo_capping AS mo_capping NUMERIC $.mo_capping_service AS mo_capping_service $.counter_mo_capping AS counter_mo_capping NUMERIC $.counter_mo_capping_service AS counter_mo_capping_service $.status_capping AS status_capping TAG $.kpi_upper_limit_capping AS kpi_upper_limit_capping NUMERIC $.is_machine_learning_capping AS is_machine_learning_capping TAG $.ratio_send AS ratio_send NUMERIC $.ratio_receive AS ratio_receive NUMERIC $.counter_mo_ratio AS counter_mo_ratio NUMERIC $.status_ratio AS status_ratio TAG $.kpi_upper_limit_ratio_send AS kpi_upper_limit_ratio_send NUMERIC $.kpi_upper_limit_ratio_receive AS kpi_upper_limit_ratio_receive NUMERIC $.is_machine_learning_ratio AS is_machine_learning_ratio TAG $.api_url AS api_url TEXT $.last_update AS last_update TEXT $.last_update_capping AS last_update_capping TEXT $.po AS po TEXT $.cost AS cost TEXT $.cost_per_conversion AS cost_per_conversion TEXT $.agency_fee AS agency_fee TEXT $.target_daily_budget AS target_daily_budget TEXT $.url_postback AS url_postback TEXT $.postback_method AS postback_method TEXT $.mainstream_lp_type AS mainstream_lp_type TEXT $.mainstream_lp_type AS mainstream_lp_type TEXT $.title AS title TEXT $.title_original AS title_original TEXT $.title_color AS title_color TEXT $.title_style AS title_style TEXT $.title_page_type AS title_page_type TEXT $.title_font_size AS title_font_size TEXT $.sub_title AS sub_title TEXT $.sub_title_original AS sub_title_original TEXT $.sub_title_color AS sub_title_color TEXT $.sub_title_style AS sub_title_style TEXT $.sub_title_page_type AS sub_title_page_type TEXT $.sub_title_font_size AS sub_title_font_size TEXT $.background_url AS background_url TEXT $.logo_url AS logo_url TEXT $.tnc AS tnc TEXT $.tnc_original AS tnc_original TEXT $.tnc_color AS tnc_color TEXT $.tnc_style AS tnc_style TEXT $.tnc_page_type AS tnc_page_type TEXT $.tnc_font_size AS tnc_font_size TEXT $.button_subscribe AS button_subscribe TEXT $.button_subscribe_original AS button_subscribe_original TEXT $.button_subscribe_color AS button_subscribe_color TEXT $.status_submit_key_mainstream AS status_submit_key_mainstream TAG $.key_mainstream AS key_mainstream TEXT $.channel AS channel TEXT $.google_sheet AS google_sheet TEXT $.google_sheet_billable AS google_sheet_billable TEXT  $.currency AS currency TEXT $.mcc AS mcc TEXT $.clickable_anywhere AS clickable_anywhere TAG $.non_target_url AS non_target_url TEXT $.enable_ip_ranges AS enable_ip_ranges TAG $.conversion_name AS conversion_name TEXT $.domain_service AS domain_service TEXT $.campaign_detail_name AS campaign_detail_name TEXT $.prefix AS prefix TEXT $.country_dialing_code AS country_dialing_code TEXT $.unused_traffic_redirect_type AS unused_traffic_redirect_type TEXT $.company_legal_name AS company_legal_name TEXT $.company_address AS company_address TEXT $.company_email AS company_email TEXT $.company_phone AS company_phone TEXT $.service_price AS service_price TEXT $.portal_url AS portal_url TEXT $.is_evina AS is_evina TAG $.evina_redirect_fraud_url AS evina_redirect_fraud_url TEXT ",)
 
 			h.DS.SetData(cfgRediskey, "$", string(cfgDataConfig))
 		}
