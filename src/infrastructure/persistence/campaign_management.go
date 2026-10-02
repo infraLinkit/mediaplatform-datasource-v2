@@ -162,7 +162,7 @@ func (r *BaseModel) GetCampaignManagementDetail(o entity.DisplayCampaignManageme
 		campaign_details.url_type,
 		campaign_details.device_type,
 		campaign_details.is_billable,
-		campaigns.created_at`
+		campaign_details.created_at`
 
 	// Add cc_email only if campaign objective is not MAINSTREAM
 	if !strings.Contains(campaignObjective, "MAINSTREAM") {
