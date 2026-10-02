@@ -186,7 +186,7 @@ func estROASOrFallback(sumGrossRevenue float64, hasCohort bool, mo int, cac, rea
 		return 0
 	}
 	estLTV := sumGrossRevenue / float64(mo)
-	return estLTV / cac * 100
+	return estLTV / cac
 }
 
 // GetCampaignROASCohortSumByCampaign sums estimated_gross_revenue_full per

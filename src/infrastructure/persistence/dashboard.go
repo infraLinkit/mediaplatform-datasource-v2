@@ -438,7 +438,7 @@ func (r *BaseModel) GetCampaign(order_type string, order_by string, offset strin
 			r.DB.ScanRows(rows, &s)
 
 			if s.SpendToAdnets > 0 {
-				s.ROAS = s.Spend / s.SpendToAdnets * 100
+				s.ROAS = s.Spend / s.SpendToAdnets
 				s.Profit = s.Spend - s.SpendToAdnets - s.TechnicalFee
 			}
 
@@ -846,7 +846,7 @@ func (r *BaseModel) GetDisplayDashboard(date_range string, date_before string, d
 
 		// Compute derived metrics
 		if SummaryDashboard.SpendingToAdnets > 0 {
-			SummaryDashboard.ROAS = SummaryDashboard.TotalSpending / SummaryDashboard.SpendingToAdnets * 100
+			SummaryDashboard.ROAS = SummaryDashboard.TotalSpending / SummaryDashboard.SpendingToAdnets
 		}
 		if SummaryDashboard.TotalMO > 0 {
 			SummaryDashboard.ECPA = SummaryDashboard.SpendingToAdnets / float64(SummaryDashboard.TotalMO)
@@ -863,7 +863,7 @@ func (r *BaseModel) GetDisplayDashboard(date_range string, date_before string, d
 			// data, rather than trusting Mart's own precomputed ratio.
 			cohortROAS, cohortROIMonths, cohortOK := r.GetCampaignROASCohortAgg(date_list, country, service, SummaryDashboard.TotalMO, SummaryDashboard.CAC)
 			if cohortOK {
-				SummaryDashboard.EstROAS = cohortROAS * 100
+				SummaryDashboard.EstROAS = cohortROAS
 				// roi_months_payback is already in months, not a ratio — do not scale.
 				SummaryDashboard.EstROI = cohortROIMonths
 			} else {
@@ -885,10 +885,10 @@ func (r *BaseModel) GetDisplayDashboard(date_range string, date_before string, d
 			SummaryDashboard.ROI = SummaryDashboard.MarginPct
 		}
 		if SummaryDashboard.InternalSpend > 0 {
-			SummaryDashboard.InternalROAS = SummaryDashboard.InternalRevenue / SummaryDashboard.InternalSpend * 100
+			SummaryDashboard.InternalROAS = SummaryDashboard.InternalRevenue / SummaryDashboard.InternalSpend
 		}
 		if SummaryDashboard.ExternalSpend > 0 {
-			SummaryDashboard.ExternalROAS = SummaryDashboard.ExternalRevenue / SummaryDashboard.ExternalSpend * 100
+			SummaryDashboard.ExternalROAS = SummaryDashboard.ExternalRevenue / SummaryDashboard.ExternalSpend
 		}
 		// ECPA/CAC computed earlier in this function, before the cohort block —
 		// GetCampaignROASCohortAgg needs them.
@@ -1027,7 +1027,7 @@ func (r *BaseModel) GetDisplayDashboard(date_range string, date_before string, d
 			}
 
 			if DetailChart.TotalSpending > 0 {
-				DetailChart.TotalROAS = DetailChart.TotalRevenue / DetailChart.TotalSpending * 100
+				DetailChart.TotalROAS = DetailChart.TotalRevenue / DetailChart.TotalSpending
 			}
 
 			DetailChartData = append(DetailChartData, DetailChart)

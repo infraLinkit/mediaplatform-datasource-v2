@@ -85,7 +85,7 @@ func (r *BaseModel) GetCountryStats(date_range, date_before, date_after, country
 	}
 	for i := range results {
 		if results[i].Spend > 0 {
-			results[i].ROAS = results[i].Revenue / results[i].Spend * 100
+			results[i].ROAS = results[i].Revenue / results[i].Spend
 		}
 		if total > 0 {
 			results[i].Share = results[i].Spend / total * 100
@@ -292,9 +292,9 @@ func (r *BaseModel) GetAlerts(country, service string, allowedAdnets, allowedCom
 		q3 = q3.Where("company IN ?", allowedCompanies)
 	}
 	q3.Select(`campaign_id, MAX(country) as country, MAX(adnet) as adnet,
-		SUM(saaf)/NULLIF(SUM(sbaf),0)*100 as roas, SUM(sbaf) as spend`).
+		SUM(saaf)/NULLIF(SUM(sbaf),0) as roas, SUM(sbaf) as spend`).
 		Group("campaign_id").
-		Having("SUM(sbaf) > 0 AND SUM(saaf)/NULLIF(SUM(sbaf),0)*100 > 250").
+		Having("SUM(sbaf) > 0 AND SUM(saaf)/NULLIF(SUM(sbaf),0) > 2.5").
 		Order("roas DESC").Limit(1).Scan(&outperf)
 	for _, o := range outperf {
 		alerts = append(alerts, entity.AlertItem{
@@ -361,7 +361,7 @@ func (r *BaseModel) GetRollup(date_range, date_before, date_after, client_type, 
 		var row entity.RollupRow
 		r.DB.ScanRows(rows, &row)
 		if row.Spend > 0 {
-			row.ROAS = row.Revenue / row.Spend * 100
+			row.ROAS = row.Revenue / row.Spend
 		}
 		if row.Revenue > 0 {
 			row.MarginPct = (row.Revenue - row.Spend) / row.Revenue * 100
@@ -484,7 +484,7 @@ func (r *BaseModel) GetCampaignHierarchy(date_range, date_before, date_after, cl
 			MO: s.MO, Spend: s.Spend, Revenue: s.Revenue, Source: "summary",
 		}
 		if row.Spend > 0 {
-			row.ROAS = row.Revenue / row.Spend * 100
+			row.ROAS = row.Revenue / row.Spend
 		}
 		if row.Revenue > 0 {
 			row.RecoveryDays = row.Spend * 30.0 / row.Revenue
@@ -508,7 +508,7 @@ func (r *BaseModel) GetCampaignHierarchy(date_range, date_before, date_after, cl
 			}
 			sumGrossRevenue, hasCohort := cohortSums[row.CampaignID]
 			if hasCohort && row.MO > 0 && cac > 0 {
-				row.EstROAS = (sumGrossRevenue / float64(row.MO)) / cac * 100
+				row.EstROAS = (sumGrossRevenue / float64(row.MO)) / cac
 				row.HasEstROAS = true
 			}
 		}
@@ -587,7 +587,7 @@ func (r *BaseModel) GetCampaignHierarchy(date_range, date_before, date_after, cl
 					MO: a.MO, Spend: a.Spend, Revenue: a.Revenue, Source: "api",
 				}
 				if row.Spend > 0 {
-					row.ROAS = row.Revenue / row.Spend * 100
+					row.ROAS = row.Revenue / row.Spend
 				}
 				if row.Revenue > 0 {
 					row.RecoveryDays = row.Spend * 30.0 / row.Revenue
@@ -606,7 +606,7 @@ func (r *BaseModel) GetCampaignHierarchy(date_range, date_before, date_after, cl
 					}
 					sumGrossRevenue, hasCohort := cohortSums[row.CampaignID]
 					if hasCohort && row.MO > 0 && cac > 0 {
-						row.EstROAS = (sumGrossRevenue / float64(row.MO)) / cac * 100
+						row.EstROAS = (sumGrossRevenue / float64(row.MO)) / cac
 						row.HasEstROAS = true
 					}
 				}
@@ -678,7 +678,7 @@ func (r *BaseModel) GetAdnetStats(date_range, date_before, date_after, client_ty
 		var row entity.AdnetStat
 		r.DB.ScanRows(rows, &row)
 		if row.Spend > 0 {
-			row.ROAS = row.Revenue / row.Spend * 100
+			row.ROAS = row.Revenue / row.Spend
 		}
 		if row.Revenue > 0 {
 			row.RecoveryDays = row.Spend * 30.0 / row.Revenue
@@ -747,7 +747,7 @@ func (r *BaseModel) GetHeatmap(date_range, date_before, date_after, country, ser
 	}
 	var raw []cellRow
 	err := query.Select(`url_service_key, adnet, service,
-		SUM(saaf)/NULLIF(SUM(sbaf),0)*100 as roas,
+		SUM(saaf)/NULLIF(SUM(sbaf),0) as roas,
 		SUM(sbaf) as spend,
 		SUM(mo_received) as mo`).
 		Group("url_service_key, adnet, service").Order("spend DESC").Scan(&raw).Error
@@ -852,7 +852,7 @@ func (r *BaseModel) GetCampaignDaily(campaign_id, date_range, date_before, date_
 		SUM(mo_received) as mo,
 		SUM(sbaf) as spend,
 		SUM(saaf) as revenue,
-		SUM(saaf)/NULLIF(SUM(sbaf),0)*100 as roas`).
+		SUM(saaf)/NULLIF(SUM(sbaf),0) as roas`).
 		Group("DATE(summary_date)").Order("date ASC").Rows()
 	if err != nil {
 		return nil, err
@@ -896,7 +896,7 @@ func (r *BaseModel) GetCampaignDaily(campaign_id, date_range, date_before, date_
 				continue
 			}
 			cac := results[i].Spend / float64(results[i].MO)
-			results[i].EstROAS = (cd.SumGrossRevenue / float64(results[i].MO)) / cac * 100
+			results[i].EstROAS = (cd.SumGrossRevenue / float64(results[i].MO)) / cac
 			results[i].HasEstROAS = true
 		}
 	}
@@ -929,7 +929,7 @@ func (r *BaseModel) GetServiceDaily(country, operator, service, date_range, date
 		SUM(mo_received) as mo,
 		SUM(sbaf) as spend,
 		SUM(saaf) as revenue,
-		SUM(saaf)/NULLIF(SUM(sbaf),0)*100 as roas`).
+		SUM(saaf)/NULLIF(SUM(sbaf),0) as roas`).
 		Group("DATE(summary_date)").Order("date ASC").Rows()
 	if err != nil {
 		return nil, err
